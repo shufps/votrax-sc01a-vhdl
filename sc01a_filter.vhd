@@ -1,7 +1,8 @@
 -- sc01a_filter.vhd
 -- Votrax SC01-A Filter Pipeline Sequencer
 --
--- Copyright (c) 2026 Thomas Pototschnig (@shufps)
+-- Copyright (c) 2026 shufps
+-- https://github.com/shufps/votrax-sc01a-vhdl
 --
 -- BSD 3-Clause License
 --

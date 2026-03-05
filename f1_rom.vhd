@@ -1,7 +1,8 @@
 -- f1_rom.vhd
 -- Votrax SC01-A: First Formant (F1) Filter Coefficient ROM
 --
--- Copyright (c) 2026 Thomas Pototschnig (@shufps)
+-- Copyright (c) 2026 shufps
+-- https://github.com/shufps/votrax-sc01a-vhdl
 --
 -- BSD 3-Clause License
 --

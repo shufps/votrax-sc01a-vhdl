@@ -1,7 +1,8 @@
 -- fn_rom.vhd
 -- Votrax SC01-A: Nasal Formant (FN) Filter Coefficient ROM
 --
--- Copyright (c) 2026 Thomas Pototschnig (@shufps)
+-- Copyright (c) 2026 shufps
+-- https://github.com/shufps/votrax-sc01a-vhdl
 --
 -- BSD 3-Clause License
 --

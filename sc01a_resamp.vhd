@@ -1,7 +1,8 @@
 -- sc01a_resamp.vhd
 -- Votrax SC01-A Output Resampler: variable rate → 48 kHz
 --
--- Copyright (c) 2026 Thomas Pototschnig (@shufps)
+-- Copyright (c) 2026 shufps
+-- https://github.com/shufps/votrax-sc01a-vhdl
 --
 -- BSD 3-Clause License
 --

@@ -1,0 +1,6 @@
+*.o
+*.vcd
+*.wav
+*.mp3
+*.raw
+*.cf

@@ -29,7 +29,7 @@ sc01a.vhd was synthesized with Quartus Lite 17.1 (no pin assignments; only a 50 
 
 The default 50 MHz target was met (Fmax ~76 MHz).
 
-Note: The internal DDS can be adjusted via the 8-bit DAC input, which changes the spacing of the generated sclock pulses. If the pulses get too close together, the filter chain (running on the normal system clock) may no longer have enough time to complete its processing between sclock events. 
+Note: The internal DDS can be adjusted via the 8-bit DAC input, which changes the spacing of the generated sclock pulses. If the pulses get too close together, the filter chain (running on the normal system clock) may no longer have enough time to complete its processing between sclock events.
 
 The clock can be configured via a generic. Clocks as low as ~20 MHz should still work across the usual clock-sweeping range.
 
@@ -66,47 +66,68 @@ Coefficient layout for all ROMs: `addr[2:0]` = coeff index:
 
 | File | Description |
 |------|-------------|
-| `sc01a_tb.vhd` | GHDL testbench — plays Q\*bert phoneme sequence, writes `audio_out.raw` |
-| `votrax_tb_vectors.vhd` | Input event vectors (auto-generated, do not edit) |
+| `sc01a_tb.vhd` | GHDL testbench — replays phoneme event vectors, writes `audio_out.raw` |
+| `votrax_tb_vectors.vhd` | Input event vectors (auto-generated via `mame-fp/convert_to_vectors.py`, do not edit) |
 | `iir_filter_sim.vhd` | Simulation-only IIR variant — coefficients passed directly as ports (no BRAM), useful for isolated filter testing |
 | `simulate.sh` | One-shot GHDL compile + simulate script |
 
 ### Running the simulation
 
 ```bash
-cd rtl/sc01a
 ./simulate.sh
 ```
 
 Produces `audio_out.raw` (signed 16-bit samples, one per line) and `wave.vcd`.
 
 Convert to WAV for listening:
-```python
-import numpy as np, scipy.io.wavfile as wav
-s = np.loadtxt("audio_out.raw", dtype=np.int16)
-wav.write("audio_out.wav", 48000, s)
+```bash
+python3 tools/raw_to_wave.py audio_out.raw audio_out.wav
 ```
+
+## mame-fp/
+
+The `mame-fp/` directory contains the C++ reference simulation and tooling for generating GHDL testbench input vectors from real MAME captures.
+
+| File | Description |
+|------|-------------|
+| `votrax.cpp` | Modified version of the MAME votrax.cpp (BSD-3-Clause, Copyright Olivier Galibert) — adapted to use s(2.15) fixed-point arithmetic and ROM-based coefficient lookup instead of floating-point; served as the initial feasibility test before the VHDL implementation |
+| `votrax.h` | MAME votrax header (modified accordingly) |
+| `votrax_rom_tables.h` | ROM parameter tables extracted from MAME |
+| `votrax_dump.h` | Include in `votrax.cpp` (or MAME) to enable event logging — writes `votrax_input.txt` (phoneme/clock events) and `votrax_output.txt` (expected audio samples) |
+| `convert_to_vectors.py` | Converts `votrax_input.txt` to `votrax_tb_vectors.vhd` for GHDL replay |
+| `votrax_input.txt` | Example capture: Q\*bert phoneme sequence |
+| `votrax_output.txt` | Corresponding expected audio samples from the C++ simulation |
+
+The C++ reference simulation was the first step: validating that the fixed-point math and ROM coefficient approach produce correct output before committing to GHDL. Faster iteration than the VHDL testbench for algorithm-level debugging.
+
+### Workflow: capture from MAME → replay in GHDL
+
+1. Enable logging in `votrax.cpp` by including `votrax_dump.h` (or use the provided example files in `mame-fp/`)
+2. Run the C++ simulation — produces `votrax_input.txt` and `votrax_output.txt`
+3. Convert to VHDL testbench vectors:
+   ```bash
+   python3 mame-fp/convert_to_vectors.py mame-fp/votrax_input.txt -o votrax_tb_vectors.vhd
+   # optional: compress long silent gaps
+   python3 mame-fp/convert_to_vectors.py mame-fp/votrax_input.txt --max-gap 500 -o votrax_tb_vectors.vhd
+   ```
+4. Run the GHDL simulation:
+   ```bash
+   ./simulate.sh
+   python3 tools/raw_to_wave.py audio_out.raw audio_out.wav
+   ```
 
 ## tools/
 
 | File | Description |
 |------|-------------|
 | `gen_votrax_roms.cpp` | Generates all `f*_rom.vhd` files — computes bilinear-transform IIR coefficients in s(2.15) fixed-point for each filter operating point |
-| `votrax.cpp` | Modified version of the MAME votrax.cpp (BSD-3-Clause, Copyright Olivier Galibert) — adapted to use s(2.15) fixed-point arithmetic and ROM-based coefficient lookup instead of floating-point; served as the initial feasibility test before the VHDL implementation |
-| `votrax.h` | MAME votrax header (modified accordingly) |
-| `votrax_rom_tables.h` | ROM parameter tables extracted from MAME |
-
-The C++ reference simulation (`votrax.cpp`) was the first step: validating that the fixed-point math and ROM coefficient approach produce correct output before committing to GHDL. Faster iteration than the VHDL testbench for algorithm-level debugging.
+| `raw_to_wave.py` | Converts `audio_out.raw` (text, one int16 per line) to a 48 kHz WAV file |
 
 ### Regenerating the coefficient ROMs
 
 ```bash
-cd rtl/sc01a/tools
+cd tools
 g++ -O2 -o gen_votrax_roms gen_votrax_roms.cpp -lm
 ./gen_votrax_roms
 # writes f1_rom.vhd, f2v_rom.vhd, f3_rom.vhd, f4_rom.vhd, fn_rom.vhd, fx_rom.vhd and votrax_rom_tables.h to /tmp/
 ```
-
-
-
-

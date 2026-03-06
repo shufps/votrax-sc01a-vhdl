@@ -53,6 +53,17 @@ entity sc01a is
 end entity;
 
 architecture rtl of sc01a is
+    function gain_3db(x : signed(17 downto 0)) return signed is
+        variable y : signed(17 downto 0);
+    begin
+        y := x
+             + shift_right(x, 2)
+             + shift_right(x, 3)
+             + shift_right(x, 5)
+             + shift_right(x, 7);
+
+        return y;
+    end function;
 
     -- ================================================================
     -- Derived constants from CLK_HZ generic
@@ -215,13 +226,13 @@ begin
                 s_out_valid => audio_48k_valid
             );
 
-        audio_out <= audio_48k;
+        audio_out <= gain_3db(audio_48k)(17 downto 2);
         audio_valid <= audio_48k_valid;
         audio_out_u <= std_logic_vector(audio_48k + x"8000");
     end generate RESAMPLER;
 
     NO_RESAMPLER : if ENABLE_RESAMPLER = 0 generate
-        audio_out <= filt_sample(17 downto 2);
+        audio_out <= gain_3db(filt_sample)(17 downto 2);
         audio_valid <= filt_done;
         audio_out_u <= std_logic_vector(filt_sample(17 downto 2) + x"8000");
     end generate NO_RESAMPLER;

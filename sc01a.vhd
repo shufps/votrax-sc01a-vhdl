@@ -293,7 +293,7 @@ begin
     end process;
 
     -- ================================================================
-    -- 2-FF synchronizer for stb (CDC: sound_clk → clk_sys)
+    -- 2-FF synchronizer for stb for possible CDC
     -- ================================================================
     process (clk)
     begin

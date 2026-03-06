@@ -147,7 +147,7 @@ architecture rtl of sc01a is
     signal ticks_done : std_logic := '0';
     signal stb_prev : std_logic := '0';
 
-    -- 2-FF synchronizer for stb (CDC: sound_clk → clk_sys)
+    -- 2-FF synchronizer for stb for possible CDC
     signal stb_sync : std_logic_vector(1 downto 0) := "00";
 
     function interpolate(

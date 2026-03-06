@@ -226,7 +226,7 @@ begin
                 s_out_valid => audio_48k_valid
             );
 
-        audio_out <= gain_3db(audio_48k)(17 downto 2);
+        audio_out <= gain_3db(resize(audio_48k, 18))(17 downto 2);
         audio_valid <= audio_48k_valid;
         audio_out_u <= std_logic_vector(audio_48k + x"8000");
     end generate RESAMPLER;

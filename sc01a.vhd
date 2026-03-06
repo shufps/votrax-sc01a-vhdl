@@ -147,6 +147,9 @@ architecture rtl of sc01a is
     signal ticks_done : std_logic := '0';
     signal stb_prev : std_logic := '0';
 
+    -- 2-FF synchronizer for stb (CDC: sound_clk → clk_sys)
+    signal stb_sync : std_logic_vector(1 downto 0) := "00";
+
     function interpolate(
         reg_val : unsigned(7 downto 0);
         target : unsigned(3 downto 0)
@@ -290,6 +293,20 @@ begin
     end process;
 
     -- ================================================================
+    -- 2-FF synchronizer for stb (CDC: sound_clk → clk_sys)
+    -- ================================================================
+    process (clk)
+    begin
+        if rising_edge(clk) then
+            if reset_n = '0' then
+                stb_sync <= "00";
+            else
+                stb_sync <= stb_sync(0) & stb;
+            end if;
+        end if;
+    end process;
+
+    -- ================================================================
     -- Phoneme latch
     -- ================================================================
     process (clk)
@@ -301,11 +318,11 @@ begin
                 commit_phone <= '0';
             else
                 commit_phone <= '0';
-                if stb = '1' and last_stb = '0' then
+                if stb_sync(1) = '1' and last_stb = '0' then
                     phoneme_reg <= p;
                     commit_phone <= '1';
                 end if;
-                last_stb := stb;
+                last_stb := stb_sync(1);
             end if;
 
         end if;

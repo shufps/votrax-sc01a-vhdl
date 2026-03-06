@@ -102,7 +102,7 @@ The C++ reference simulation was the first step: validating that the fixed-point
 
 ### Workflow: capture from MAME → replay in GHDL
 
-1. Enable logging in `votrax.cpp` by including `votrax_dump.h` (or use the provided example files in `mame-fp/`)
+1. Copy the files from the `mame-fp` folder into MAME to `/src/devices/sound/` and compile
 2. Run the C++ simulation — produces `votrax_input.txt` and `votrax_output.txt`
 3. Convert to VHDL testbench vectors:
    ```bash
@@ -131,3 +131,4 @@ g++ -O2 -o gen_votrax_roms gen_votrax_roms.cpp -lm
 ./gen_votrax_roms
 # writes f1_rom.vhd, f2v_rom.vhd, f3_rom.vhd, f4_rom.vhd, fn_rom.vhd, fx_rom.vhd and votrax_rom_tables.h to /tmp/
 ```
+

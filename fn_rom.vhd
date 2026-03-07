@@ -20,12 +20,12 @@ architecture rtl of fn_rom is
     type rom_t is array(0 to 7) of signed(17 downto 0);
     constant ROM : rom_t := (
         to_signed(  32768, 18),  -- [   0] b0 = +1.000000
-        to_signed(   9890, 18),  -- [   1] a0 = +0.301819
+        to_signed(   3717, 18),  -- [   1] a0 = +0.113434
         to_signed(      0, 18),  -- [   2] a1 = +0.000000
-        to_signed(  -9890, 18),  -- [   3] a2 = -0.301819
+        to_signed(  -3717, 18),  -- [   3] a2 = -0.113434
         to_signed(      0, 18),  -- [   4] a3 = +0.000000
-        to_signed( -36284, 18),  -- [   5] b1 = -1.107300
-        to_signed(   3516, 18),  -- [   6] b2 = +0.107300
+        to_signed( -54543, 18),  -- [   5] b1 = -1.664520
+        to_signed(  21775, 18),  -- [   6] b2 = +0.664520
         to_signed(      0, 18)   -- [   7] b3 = +0.000000
     );
 

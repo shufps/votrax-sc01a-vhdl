@@ -109,22 +109,26 @@ Coeffs build_lowpass(double c1t, double c1b)
     return { 1.0, 1.0/b0, 0, 0, 0, (1.0-m)/b0, 0, 0 };
 }
 
-// Noise shaper: a1=0, a2=-a0, b3=0 → pad with 0 for uniform ROM
-// Note: prewarping for the noise shaper requires knowing cclock in Hz
-// (fpeak_norm = sqrt(cclock/k2_vhdl)/(2*pi) which doesn't simplify without cclock).
-// At nominal sclock=52778Hz and fpeak≈2kHz, the warping error is <0.5% → negligible.
-// Standard bilinear (T=4) is used here intentionally.
+// Noise shaper: a1=0, a2=-a0, b3=0 -> pad with 0 for uniform ROM
+// H(s) = k0*s / (1 + k1*s + k2*s^2), normalized (cclock=1):
+//   k0 = c2t*c3*c2b/c4    (dimensionless)
+//   k1 = c2t*c2b          (cclock cancels from MAME's k1=c2t*(cclock*c2b) after normalization)
+//   k2 = c1*c2t*c3/c4     (cclock cancels from MAME's k2=c1*c2t*c3/(cclock*c4))
+// fpeak_norm = sqrt(1/k2_norm)/(2*pi) is clock-independent -> prewarping works correctly.
 Coeffs build_noise_shaper(double c1, double c2t, double c2b,
                            double c3, double c4)
 {
-    static constexpr double T = 2.0 * SCLOCK_NORM; // = 4.0
     double k0 = c2t * c3 * c2b / c4;
     double k1 = c2t * c2b;
     double k2 = c1  * c2t * c3 / c4;
 
-    double m0 = T * k0;
-    double m1 = T * k1;
-    double m2 = T * k2;
+    double fpeak_norm = sqrt(1.0 / k2) / (2*M_PI);
+    double zn  = prewarp_zc(fpeak_norm);
+    double zn2 = zn * zn;
+
+    double m0 = zn  * k0;
+    double m1 = zn  * k1;
+    double m2 = zn2 * k2;
 
     double b0 = 1+m1+m2;
     return { 1.0, m0/b0, 0, -m0/b0, 0, (2-2*m2)/b0, (1-m1+m2)/b0, 0 };

@@ -8,7 +8,7 @@
 #pragma once
 #include <cstdint>
 
-static constexpr int VOTRAX_FP_FRAC  = 15;
+static constexpr int VOTRAX_FP_FRAC = 15;
 static constexpr int VOTRAX_FP_SCALE = 32768; // 2^15
 
 // F1: 16 settings × 8 coeffs
@@ -689,7 +689,7 @@ static const int32_t f4_rom[8] = {   32768,    3085,    9254,    9254,    3085, 
 static const int32_t fx_rom[8] = {   32768,    8225,       0,       0,       0,  -16317,       0,       0 };
 
 // FN noise shaper: constant
-static const int32_t fn_rom[8] = {   32768,    9890,       0,   -9890,       0,  -36284,    3516,       0 };
+static const int32_t fn_rom[8] = {   32768,    3717,       0,   -3717,       0,  -54543,   21775,       0 };
 
 // F2N: 512 settings × 8 coeffs = 4096 entries
 // addr = (filt_f2q << 8) | (filt_f2 << 3) | coeff_idx

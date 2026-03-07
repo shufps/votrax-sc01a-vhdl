@@ -414,6 +414,8 @@ void gen_c_header(FILE *f)
     fprintf(f, "\n");
     fprintf(f, "#pragma once\n");
     fprintf(f, "#include <cstdint>\n\n");
+    static constexpr int VOTRAX_FP_FRAC  = 15;
+    fprintf(f, "static constexpr int VOTRAX_FP_FRAC = %d;\n", FP_FRAC);
     fprintf(f, "static constexpr int VOTRAX_FP_SCALE = %d; // 2^%d\n\n",
             (int)FP_SCALE, FP_FRAC);
 

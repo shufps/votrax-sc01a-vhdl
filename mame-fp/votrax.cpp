@@ -6,8 +6,7 @@
 
     Votrax SC01A simulation
 
-fixed point version
-modified for sc01a.vhd
+- ROM based fixed point version by shufps
 
 ***************************************************************************/
 
@@ -24,6 +23,9 @@ modified for sc01a.vhd
 //#define VERBOSE (LOG_GENERAL | LOG_PHONE)
 #include "logmacro.h"
 
+// f2n was made working but calculation is questionable, 
+// keep it disabled per default
+//#define F2N_ENABLED
 
 DEFINE_DEVICE_TYPE(VOTRAX_SC01, votrax_sc01_device, "votrsc01", "Votrax SC-01")
 DEFINE_DEVICE_TYPE(VOTRAX_SC01A, votrax_sc01a_device, "votrsc01a", "Votrax SC-01-A")
@@ -454,12 +456,19 @@ sound_stream::sample_t votrax_sc01_device::analog_calc()
 	int32_t n2 = fp_scale15(n, m_filt_fc);
 	shift_hist(n2, m_noise_3);
 
+#ifndef F2N_ENABLED
 	// 8. F2 noise injection: neutralized → output = 0
+    int32_t n3 = 0;
 	shift_hist(0, m_noise_4);
+#else
+	// 8. Apply the f2 noise filter (f2n_rom, same address as f2v)
+	int32_t n3 = apply_filter(m_noise_3, m_noise_4, f2n_rom, m_f2v_addr);
+	shift_hist(n3, m_noise_4);
 
 	// Mixed path.
 	// 9. Add the f2 voice and f2 noise outputs
-	int32_t vn = v; // + 0 (f2n neutralized)
+#endif
+	int32_t vn = v + n3;
 	shift_hist(vn, m_vn_1);
 
 	// 10. Apply the f3 filter

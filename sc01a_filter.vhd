@@ -23,7 +23,8 @@ use ieee.numeric_std.all;
 
 entity sc01a_filter is
     generic (
-        SIM_FILTER : boolean := false -- true = instant filter, false = real BRAM filter
+        SIM_FILTER        : boolean := false; -- true = instant filter, false = real BRAM filter
+        ENABLE_F2N        : boolean := false  -- true = F2N injection filter active
     );
 
     port (
@@ -320,12 +321,19 @@ begin
                         end if;
 
                         -- ------------------------------------------------
-                        -- Scale noise by filt_fc → fire F2N injection filter
+                        -- Scale noise by filt_fc → fire F2N (if enabled)
+                        -- or pass v_sig directly to F3
                         -- ------------------------------------------------
                     when S_SCALE_FC =>
-                        f2n.x_in <= fp_scale15(n_sig, filt_fc);
-                        f2n.start <= '1';
-                        state <= S_WAIT_F2N;
+                        if ENABLE_F2N then
+                            f2n.x_in <= fp_scale15(n_sig, filt_fc);
+                            f2n.start <= '1';
+                            state <= S_WAIT_F2N;
+                        else
+                            f3.x_in <= v_sig;
+                            f3.start <= '1';
+                            state <= S_WAIT_F3;
+                        end if;
 
                         -- ------------------------------------------------
                         -- F2N done → mix v + f2n, fire F3

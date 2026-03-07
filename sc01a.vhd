@@ -26,8 +26,9 @@ use ieee.numeric_std.all;
 
 entity sc01a is
     generic (
-        CLK_HZ : integer := 50_000_000; -- system clock frequency
-        ENABLE_RESAMPLER : integer := 1
+        CLK_HZ           : integer := 50_000_000; -- system clock frequency
+        ENABLE_RESAMPLER : integer := 1;
+        ENABLE_F2N       : boolean := false        -- F2N injection filter
     );
     port (
         -- System
@@ -191,6 +192,7 @@ begin
     -- Filter pipeline
     -- ================================================================
     u_filter : entity work.sc01a_filter
+        generic map(ENABLE_F2N => ENABLE_F2N)
         port map(
             clk => clk,
             reset_n => reset_n,

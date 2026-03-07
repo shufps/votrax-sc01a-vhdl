@@ -20,7 +20,7 @@ package votrax_tb_vectors is
         data   : integer;  -- event data
     end record;
 
-    constant N_EVENTS : integer := 246;
+    constant N_EVENTS : integer := 470;
 
     type input_vec_array is array(0 to N_EVENTS-1) of input_event_t;
 
@@ -29,249 +29,472 @@ package votrax_tb_vectors is
         (ts_us=>       120, event=>1, data=>    950000),  -- CLOCK freq=950000Hz
         (ts_us=>       135, event=>3, data=>         3),  -- INFLECTION inflection=3
         (ts_us=>       135, event=>2, data=>       254),  -- PHONE phone=0x3E inflection=3
-        (ts_us=>    141544, event=>2, data=>       219),  -- PHONE phone=0x1B inflection=3
-        (ts_us=>    198069, event=>2, data=>       192),  -- PHONE phone=0x00 inflection=3
-        (ts_us=>    244892, event=>2, data=>       216),  -- PHONE phone=0x18 inflection=3
-        (ts_us=>    325669, event=>2, data=>       215),  -- PHONE phone=0x17 inflection=3
-        (ts_us=>    467080, event=>2, data=>       237),  -- PHONE phone=0x2D inflection=3
-        (ts_us=>    530881, event=>2, data=>       195),  -- PHONE phone=0x03 inflection=3
-        (ts_us=>    568003, event=>2, data=>       195),  -- PHONE phone=0x03 inflection=3
-        (ts_us=>    605126, event=>2, data=>       195),  -- PHONE phone=0x03 inflection=3
-        (ts_us=>    642249, event=>2, data=>       195),  -- PHONE phone=0x03 inflection=3
-        (ts_us=>    679371, event=>2, data=>       195),  -- PHONE phone=0x03 inflection=3
-        (ts_us=>    716495, event=>2, data=>       213),  -- PHONE phone=0x15 inflection=3
-        (ts_us=>    828802, event=>2, data=>       192),  -- PHONE phone=0x00 inflection=3
-        (ts_us=>    875625, event=>2, data=>       201),  -- PHONE phone=0x09 inflection=3
-        (ts_us=>    920024, event=>2, data=>       233),  -- PHONE phone=0x29 inflection=3
-        (ts_us=>   1000802, event=>2, data=>       204),  -- PHONE phone=0x0C inflection=3
-        (ts_us=>   1081580, event=>2, data=>       234),  -- PHONE phone=0x2A inflection=3
-        (ts_us=>   1138105, event=>2, data=>       250),  -- PHONE phone=0x3A inflection=3
-        (ts_us=>   1250412, event=>2, data=>       202),  -- PHONE phone=0x0A inflection=3
-        (ts_us=>   1314211, event=>2, data=>       205),  -- PHONE phone=0x0D inflection=3
-        (ts_us=>   1378010, event=>2, data=>       222),  -- PHONE phone=0x1E inflection=3
-        (ts_us=>   1422409, event=>2, data=>       228),  -- PHONE phone=0x24 inflection=3
-        (ts_us=>   1607474, event=>2, data=>       205),  -- PHONE phone=0x0D inflection=3
-        (ts_us=>   1671273, event=>2, data=>       255),  -- PHONE phone=0x3F inflection=3
-        (ts_us=>   1871273, event=>2, data=>       255),  -- PHONE phone=0x3F inflection=3
-        (ts_us=>   2071273, event=>2, data=>       255),  -- PHONE phone=0x3F inflection=3
---
-        (ts_us=>   2271273, event=>2, data=>       245),  -- PHONE phone=0x35 inflection=3
-        (ts_us=>   2272410, event=>1, data=>    955500),  -- CLOCK freq=955500Hz
-        (ts_us=>   2275373, event=>1, data=>    961000),  -- CLOCK freq=961000Hz
-        (ts_us=>   2278223, event=>1, data=>    966500),  -- CLOCK freq=966500Hz
-        (ts_us=>   2281186, event=>1, data=>    972000),  -- CLOCK freq=972000Hz
-        (ts_us=>   2284036, event=>1, data=>    977500),  -- CLOCK freq=977500Hz
-        (ts_us=>   2287000, event=>1, data=>    983000),  -- CLOCK freq=983000Hz
-        (ts_us=>   2289963, event=>1, data=>    988500),  -- CLOCK freq=988500Hz
-        (ts_us=>   2292813, event=>1, data=>    994000),  -- CLOCK freq=994000Hz
-        (ts_us=>   2295776, event=>1, data=>    999500),  -- CLOCK freq=999500Hz
-        (ts_us=>   2298626, event=>1, data=>   1005000),  -- CLOCK freq=1005000Hz
-        (ts_us=>   2301589, event=>1, data=>   1010500),  -- CLOCK freq=1010500Hz
-        (ts_us=>   2304553, event=>1, data=>   1016000),  -- CLOCK freq=1016000Hz
-        (ts_us=>   2307402, event=>1, data=>   1021500),  -- CLOCK freq=1021500Hz
-        (ts_us=>   2310366, event=>1, data=>   1027000),  -- CLOCK freq=1027000Hz
-        (ts_us=>   2313215, event=>1, data=>   1032500),  -- CLOCK freq=1032500Hz
-        (ts_us=>   2316179, event=>1, data=>   1038000),  -- CLOCK freq=1038000Hz
-        (ts_us=>   2319142, event=>1, data=>   1043500),  -- CLOCK freq=1043500Hz
-        (ts_us=>   2321992, event=>1, data=>   1049000),  -- CLOCK freq=1049000Hz
-        (ts_us=>   2324955, event=>1, data=>   1054500),  -- CLOCK freq=1054500Hz
-        (ts_us=>   2327805, event=>1, data=>   1060000),  -- CLOCK freq=1060000Hz
-        (ts_us=>   2330768, event=>1, data=>   1065500),  -- CLOCK freq=1065500Hz
-        (ts_us=>   2333732, event=>1, data=>   1071000),  -- CLOCK freq=1071000Hz
-        (ts_us=>   2336581, event=>1, data=>   1076500),  -- CLOCK freq=1076500Hz
-        (ts_us=>   2339545, event=>1, data=>   1082000),  -- CLOCK freq=1082000Hz
-        (ts_us=>   2342394, event=>1, data=>   1087500),  -- CLOCK freq=1087500Hz
-        (ts_us=>   2345358, event=>1, data=>   1093000),  -- CLOCK freq=1093000Hz
-        (ts_us=>   2348321, event=>1, data=>   1098500),  -- CLOCK freq=1098500Hz
-        (ts_us=>   2351171, event=>1, data=>   1104000),  -- CLOCK freq=1104000Hz
-        (ts_us=>   2354134, event=>1, data=>   1109500),  -- CLOCK freq=1109500Hz
-        (ts_us=>   2356984, event=>1, data=>   1115000),  -- CLOCK freq=1115000Hz
-        (ts_us=>   2359947, event=>1, data=>   1120500),  -- CLOCK freq=1120500Hz
-        (ts_us=>   2362911, event=>1, data=>   1126000),  -- CLOCK freq=1126000Hz
-        (ts_us=>   2365760, event=>1, data=>   1131500),  -- CLOCK freq=1131500Hz
-        (ts_us=>   2368724, event=>1, data=>   1137000),  -- CLOCK freq=1137000Hz
-        (ts_us=>   2371573, event=>1, data=>   1142500),  -- CLOCK freq=1142500Hz
-        (ts_us=>   2374537, event=>1, data=>   1148000),  -- CLOCK freq=1148000Hz
-        (ts_us=>   2377500, event=>1, data=>   1153500),  -- CLOCK freq=1153500Hz
-        (ts_us=>   2380350, event=>1, data=>   1159000),  -- CLOCK freq=1159000Hz
-        (ts_us=>   2383313, event=>1, data=>   1164500),  -- CLOCK freq=1164500Hz
-        (ts_us=>   2386163, event=>1, data=>   1170000),  -- CLOCK freq=1170000Hz
-        (ts_us=>   2389126, event=>1, data=>   1175500),  -- CLOCK freq=1175500Hz
-        (ts_us=>   2392090, event=>1, data=>   1181000),  -- CLOCK freq=1181000Hz
-        (ts_us=>   2394940, event=>1, data=>   1186500),  -- CLOCK freq=1186500Hz
-        (ts_us=>   2397903, event=>1, data=>   1192000),  -- CLOCK freq=1192000Hz
-        (ts_us=>   2400753, event=>1, data=>   1197500),  -- CLOCK freq=1197500Hz
-        (ts_us=>   2403716, event=>1, data=>   1203000),  -- CLOCK freq=1203000Hz
-        (ts_us=>   2406680, event=>1, data=>   1208500),  -- CLOCK freq=1208500Hz
-        (ts_us=>   2409529, event=>1, data=>   1214000),  -- CLOCK freq=1214000Hz
-        (ts_us=>   2412493, event=>1, data=>   1219500),  -- CLOCK freq=1219500Hz
-        (ts_us=>   2415342, event=>1, data=>   1225000),  -- CLOCK freq=1225000Hz
-        (ts_us=>   2418306, event=>1, data=>   1230500),  -- CLOCK freq=1230500Hz
-        (ts_us=>   2421269, event=>1, data=>   1236000),  -- CLOCK freq=1236000Hz
-        (ts_us=>   2424119, event=>1, data=>   1241500),  -- CLOCK freq=1241500Hz
-        (ts_us=>   2427082, event=>1, data=>   1247000),  -- CLOCK freq=1247000Hz
-        (ts_us=>   2429932, event=>1, data=>   1252500),  -- CLOCK freq=1252500Hz
-        (ts_us=>   2432895, event=>1, data=>   1258000),  -- CLOCK freq=1258000Hz
-        (ts_us=>   2435859, event=>1, data=>   1263500),  -- CLOCK freq=1263500Hz
-        (ts_us=>   2438708, event=>1, data=>   1269000),  -- CLOCK freq=1269000Hz
-        (ts_us=>   2441672, event=>1, data=>   1274500),  -- CLOCK freq=1274500Hz
-        (ts_us=>   2444521, event=>1, data=>   1280000),  -- CLOCK freq=1280000Hz
-        (ts_us=>   2447485, event=>1, data=>   1285500),  -- CLOCK freq=1285500Hz
-        (ts_us=>   2450448, event=>1, data=>   1291000),  -- CLOCK freq=1291000Hz
-        (ts_us=>   2453298, event=>1, data=>   1296500),  -- CLOCK freq=1296500Hz
-        (ts_us=>   2456261, event=>1, data=>   1302000),  -- CLOCK freq=1302000Hz
-        (ts_us=>   2459111, event=>1, data=>   1307500),  -- CLOCK freq=1307500Hz
-        (ts_us=>   2462074, event=>1, data=>   1313000),  -- CLOCK freq=1313000Hz
-        (ts_us=>   2465038, event=>1, data=>   1318500),  -- CLOCK freq=1318500Hz
-        (ts_us=>   2467887, event=>1, data=>   1324000),  -- CLOCK freq=1324000Hz
-        (ts_us=>   2470851, event=>1, data=>   1329500),  -- CLOCK freq=1329500Hz
-        (ts_us=>   2473700, event=>1, data=>   1335000),  -- CLOCK freq=1335000Hz
-        (ts_us=>   2476664, event=>1, data=>   1340500),  -- CLOCK freq=1340500Hz
-        (ts_us=>   2479627, event=>1, data=>   1346000),  -- CLOCK freq=1346000Hz
-        (ts_us=>   2482477, event=>1, data=>   1351500),  -- CLOCK freq=1351500Hz
-        (ts_us=>   2485440, event=>1, data=>   1357000),  -- CLOCK freq=1357000Hz
-        (ts_us=>   2488290, event=>1, data=>   1362500),  -- CLOCK freq=1362500Hz
-        (ts_us=>   2491253, event=>1, data=>   1368000),  -- CLOCK freq=1368000Hz
-        (ts_us=>   2494217, event=>1, data=>   1373500),  -- CLOCK freq=1373500Hz
-        (ts_us=>   2497066, event=>1, data=>   1379000),  -- CLOCK freq=1379000Hz
-        (ts_us=>   2500030, event=>1, data=>   1384500),  -- CLOCK freq=1384500Hz
-        (ts_us=>   2502880, event=>1, data=>   1390000),  -- CLOCK freq=1390000Hz
-        (ts_us=>   2505843, event=>1, data=>   1395500),  -- CLOCK freq=1395500Hz
-        (ts_us=>   2508807, event=>1, data=>   1401000),  -- CLOCK freq=1401000Hz
-        (ts_us=>   2511656, event=>1, data=>   1406500),  -- CLOCK freq=1406500Hz
-        (ts_us=>   2514620, event=>1, data=>   1412000),  -- CLOCK freq=1412000Hz
-        (ts_us=>   2517469, event=>1, data=>   1417500),  -- CLOCK freq=1417500Hz
-        (ts_us=>   2520433, event=>1, data=>   1423000),  -- CLOCK freq=1423000Hz
-        (ts_us=>   2523396, event=>1, data=>   1428500),  -- CLOCK freq=1428500Hz
-        (ts_us=>   2526246, event=>1, data=>   1434000),  -- CLOCK freq=1434000Hz
-        (ts_us=>   2529209, event=>1, data=>   1439500),  -- CLOCK freq=1439500Hz
-        (ts_us=>   2532059, event=>1, data=>   1445000),  -- CLOCK freq=1445000Hz
-        (ts_us=>   2535022, event=>1, data=>   1450500),  -- CLOCK freq=1450500Hz
-        (ts_us=>   2537986, event=>1, data=>   1456000),  -- CLOCK freq=1456000Hz
-        (ts_us=>   2540835, event=>1, data=>   1461500),  -- CLOCK freq=1461500Hz
-        (ts_us=>   2543799, event=>1, data=>   1467000),  -- CLOCK freq=1467000Hz
-        (ts_us=>   2546648, event=>1, data=>   1472500),  -- CLOCK freq=1472500Hz
-        (ts_us=>   2546771, event=>1, data=>   1467000),  -- CLOCK freq=1467000Hz
-        (ts_us=>   2556460, event=>1, data=>   1461500),  -- CLOCK freq=1461500Hz
-        (ts_us=>   2566148, event=>1, data=>   1456000),  -- CLOCK freq=1456000Hz
-        (ts_us=>   2575950, event=>1, data=>   1450500),  -- CLOCK freq=1450500Hz
-        (ts_us=>   2585639, event=>1, data=>   1445000),  -- CLOCK freq=1445000Hz
-        (ts_us=>   2595327, event=>1, data=>   1439500),  -- CLOCK freq=1439500Hz
-        (ts_us=>   2605129, event=>1, data=>   1434000),  -- CLOCK freq=1434000Hz
-        (ts_us=>   2614818, event=>1, data=>   1428500),  -- CLOCK freq=1428500Hz
-        (ts_us=>   2624506, event=>1, data=>   1423000),  -- CLOCK freq=1423000Hz
-        (ts_us=>   2634309, event=>1, data=>   1417500),  -- CLOCK freq=1417500Hz
-        (ts_us=>   2643997, event=>1, data=>   1412000),  -- CLOCK freq=1412000Hz
-        (ts_us=>   2653685, event=>1, data=>   1406500),  -- CLOCK freq=1406500Hz
-        (ts_us=>   2663488, event=>1, data=>   1401000),  -- CLOCK freq=1401000Hz
-        (ts_us=>   2673176, event=>1, data=>   1395500),  -- CLOCK freq=1395500Hz
-        (ts_us=>   2682864, event=>1, data=>   1390000),  -- CLOCK freq=1390000Hz
-        (ts_us=>   2692667, event=>1, data=>   1384500),  -- CLOCK freq=1384500Hz
-        (ts_us=>   2702355, event=>1, data=>   1379000),  -- CLOCK freq=1379000Hz
-        (ts_us=>   2712044, event=>1, data=>   1373500),  -- CLOCK freq=1373500Hz
-        (ts_us=>   2721846, event=>1, data=>   1368000),  -- CLOCK freq=1368000Hz
-        (ts_us=>   2731534, event=>1, data=>   1362500),  -- CLOCK freq=1362500Hz
-        (ts_us=>   2741223, event=>1, data=>   1357000),  -- CLOCK freq=1357000Hz
-        (ts_us=>   2751025, event=>1, data=>   1351500),  -- CLOCK freq=1351500Hz
-        (ts_us=>   2760713, event=>1, data=>   1346000),  -- CLOCK freq=1346000Hz
-        (ts_us=>   2770402, event=>1, data=>   1340500),  -- CLOCK freq=1340500Hz
-        (ts_us=>   2780204, event=>1, data=>   1335000),  -- CLOCK freq=1335000Hz
-        (ts_us=>   2789893, event=>1, data=>   1329500),  -- CLOCK freq=1329500Hz
-        (ts_us=>   2799581, event=>1, data=>   1324000),  -- CLOCK freq=1324000Hz
-        (ts_us=>   2809383, event=>1, data=>   1318500),  -- CLOCK freq=1318500Hz
-        (ts_us=>   2819072, event=>1, data=>   1313000),  -- CLOCK freq=1313000Hz
-        (ts_us=>   2828760, event=>1, data=>   1307500),  -- CLOCK freq=1307500Hz
-        (ts_us=>   2838563, event=>1, data=>   1302000),  -- CLOCK freq=1302000Hz
-        (ts_us=>   2848251, event=>1, data=>   1296500),  -- CLOCK freq=1296500Hz
-        (ts_us=>   2857939, event=>1, data=>   1291000),  -- CLOCK freq=1291000Hz
-        (ts_us=>   2867742, event=>1, data=>   1285500),  -- CLOCK freq=1285500Hz
-        (ts_us=>   2877430, event=>1, data=>   1280000),  -- CLOCK freq=1280000Hz
-        (ts_us=>   2887118, event=>1, data=>   1274500),  -- CLOCK freq=1274500Hz
-        (ts_us=>   2896921, event=>1, data=>   1269000),  -- CLOCK freq=1269000Hz
-        (ts_us=>   2906609, event=>1, data=>   1263500),  -- CLOCK freq=1263500Hz
-        (ts_us=>   2916298, event=>1, data=>   1258000),  -- CLOCK freq=1258000Hz
-        (ts_us=>   2926100, event=>1, data=>   1252500),  -- CLOCK freq=1252500Hz
-        (ts_us=>   2935788, event=>1, data=>   1247000),  -- CLOCK freq=1247000Hz
-        (ts_us=>   2945477, event=>1, data=>   1241500),  -- CLOCK freq=1241500Hz
-        (ts_us=>   2955279, event=>1, data=>   1236000),  -- CLOCK freq=1236000Hz
-        (ts_us=>   2964967, event=>1, data=>   1230500),  -- CLOCK freq=1230500Hz
-        (ts_us=>   2974656, event=>1, data=>   1225000),  -- CLOCK freq=1225000Hz
-        (ts_us=>   2984458, event=>1, data=>   1219500),  -- CLOCK freq=1219500Hz
-        (ts_us=>   2994147, event=>1, data=>   1214000),  -- CLOCK freq=1214000Hz
-        (ts_us=>   3003835, event=>1, data=>   1208500),  -- CLOCK freq=1208500Hz
-        (ts_us=>   3013637, event=>1, data=>   1203000),  -- CLOCK freq=1203000Hz
-        (ts_us=>   3023326, event=>1, data=>   1197500),  -- CLOCK freq=1197500Hz
-        (ts_us=>   3033014, event=>1, data=>   1192000),  -- CLOCK freq=1192000Hz
-        (ts_us=>   3042816, event=>1, data=>   1186500),  -- CLOCK freq=1186500Hz
-        (ts_us=>   3052505, event=>1, data=>   1181000),  -- CLOCK freq=1181000Hz
-        (ts_us=>   3062193, event=>1, data=>   1175500),  -- CLOCK freq=1175500Hz
-        (ts_us=>   3071996, event=>1, data=>   1170000),  -- CLOCK freq=1170000Hz
-        (ts_us=>   3081684, event=>1, data=>   1164500),  -- CLOCK freq=1164500Hz
-        (ts_us=>   3091372, event=>1, data=>   1159000),  -- CLOCK freq=1159000Hz
-        (ts_us=>   3101175, event=>1, data=>   1153500),  -- CLOCK freq=1153500Hz
-        (ts_us=>   3110863, event=>1, data=>   1148000),  -- CLOCK freq=1148000Hz
-        (ts_us=>   3120551, event=>1, data=>   1142500),  -- CLOCK freq=1142500Hz
-        (ts_us=>   3130354, event=>1, data=>   1137000),  -- CLOCK freq=1137000Hz
-        (ts_us=>   3140042, event=>1, data=>   1131500),  -- CLOCK freq=1131500Hz
-        (ts_us=>   3149731, event=>1, data=>   1126000),  -- CLOCK freq=1126000Hz
-        (ts_us=>   3159533, event=>1, data=>   1120500),  -- CLOCK freq=1120500Hz
-        (ts_us=>   3169221, event=>1, data=>   1115000),  -- CLOCK freq=1115000Hz
-        (ts_us=>   3178910, event=>1, data=>   1109500),  -- CLOCK freq=1109500Hz
-        (ts_us=>   3188712, event=>1, data=>   1104000),  -- CLOCK freq=1104000Hz
-        (ts_us=>   3198401, event=>1, data=>   1098500),  -- CLOCK freq=1098500Hz
-        (ts_us=>   3208089, event=>1, data=>   1093000),  -- CLOCK freq=1093000Hz
-        (ts_us=>   3217891, event=>1, data=>   1087500),  -- CLOCK freq=1087500Hz
-        (ts_us=>   3227580, event=>1, data=>   1082000),  -- CLOCK freq=1082000Hz
-        (ts_us=>   3237268, event=>1, data=>   1076500),  -- CLOCK freq=1076500Hz
-        (ts_us=>   3247070, event=>1, data=>   1071000),  -- CLOCK freq=1071000Hz
-        (ts_us=>   3256759, event=>1, data=>   1065500),  -- CLOCK freq=1065500Hz
-        (ts_us=>   3266447, event=>1, data=>   1060000),  -- CLOCK freq=1060000Hz
-        (ts_us=>   3276250, event=>1, data=>   1054500),  -- CLOCK freq=1054500Hz
-        (ts_us=>   3285938, event=>1, data=>   1049000),  -- CLOCK freq=1049000Hz
-        (ts_us=>   3295626, event=>1, data=>   1043500),  -- CLOCK freq=1043500Hz
-        (ts_us=>   3305429, event=>1, data=>   1038000),  -- CLOCK freq=1038000Hz
-        (ts_us=>   3315117, event=>1, data=>   1032500),  -- CLOCK freq=1032500Hz
-        (ts_us=>   3324805, event=>1, data=>   1027000),  -- CLOCK freq=1027000Hz
-        (ts_us=>   3334608, event=>1, data=>   1021500),  -- CLOCK freq=1021500Hz
-        (ts_us=>   3344296, event=>1, data=>   1016000),  -- CLOCK freq=1016000Hz
-        (ts_us=>   3353985, event=>1, data=>   1010500),  -- CLOCK freq=1010500Hz
-        (ts_us=>   3363787, event=>1, data=>   1005000),  -- CLOCK freq=1005000Hz
-        (ts_us=>   3373475, event=>1, data=>    999500),  -- CLOCK freq=999500Hz
-        (ts_us=>   3383164, event=>1, data=>    994000),  -- CLOCK freq=994000Hz
-        (ts_us=>   3392966, event=>1, data=>    988500),  -- CLOCK freq=988500Hz
-        (ts_us=>   3402654, event=>1, data=>    983000),  -- CLOCK freq=983000Hz
-        (ts_us=>   3412343, event=>1, data=>    977500),  -- CLOCK freq=977500Hz
-        (ts_us=>   3422145, event=>1, data=>    972000),  -- CLOCK freq=972000Hz
-        (ts_us=>   3431834, event=>1, data=>    966500),  -- CLOCK freq=966500Hz
-        (ts_us=>   3441522, event=>1, data=>    961000),  -- CLOCK freq=961000Hz
-        (ts_us=>   3451324, event=>1, data=>    955500),  -- CLOCK freq=955500Hz
-        (ts_us=>   3461013, event=>1, data=>    950000),  -- CLOCK freq=950000Hz
-        (ts_us=>   3470701, event=>1, data=>    944500),  -- CLOCK freq=944500Hz
-        (ts_us=>   3476056, event=>2, data=>       255),  -- PHONE phone=0x3F inflection=3
-        (ts_us=>   3676056, event=>2, data=>       255),  -- PHONE phone=0x3F inflection=3
-        (ts_us=>   3876056, event=>2, data=>       255),  -- PHONE phone=0x3F inflection=3
-        (ts_us=>   4076056, event=>1, data=>   1038000),  -- CLOCK freq=1038000Hz
-        (ts_us=>   4076070, event=>2, data=>       193),  -- PHONE phone=0x01 inflection=3
-        (ts_us=>   4127842, event=>3, data=>         0),  -- INFLECTION inflection=0
-        (ts_us=>   4127842, event=>2, data=>        44),  -- PHONE phone=0x2C inflection=0
-        (ts_us=>   4257300, event=>2, data=>        54),  -- PHONE phone=0x36 inflection=0
-        (ts_us=>   4300192, event=>3, data=>         2),  -- INFLECTION inflection=2
-        (ts_us=>   4300192, event=>2, data=>       187),  -- PHONE phone=0x3B inflection=2
-        (ts_us=>   4429650, event=>3, data=>         3),  -- INFLECTION inflection=3
-        (ts_us=>   4429650, event=>2, data=>       253),  -- PHONE phone=0x3D inflection=3
-        (ts_us=>   4599063, event=>3, data=>         1),  -- INFLECTION inflection=1
-        (ts_us=>   4599063, event=>2, data=>        94),  -- PHONE phone=0x1E inflection=1
-        (ts_us=>   4639736, event=>3, data=>         0),  -- INFLECTION inflection=0
-        (ts_us=>   4639736, event=>2, data=>        15),  -- PHONE phone=0x0F inflection=0
-        (ts_us=>   4691507, event=>2, data=>        39),  -- PHONE phone=0x27 inflection=0
-        (ts_us=>   4808587, event=>3, data=>         3),  -- INFLECTION inflection=3
-        (ts_us=>   4808587, event=>2, data=>       255),  -- PHONE phone=0x3F inflection=3
-        (ts_us=>   4842600, event=>3, data=>         2),  -- INFLECTION inflection=2
-        (ts_us=>   4842600, event=>2, data=>       179),  -- PHONE phone=0x33 inflection=2
-        (ts_us=>   4972058, event=>3, data=>         3),  -- INFLECTION inflection=3
-        (ts_us=>   4972058, event=>2, data=>       249),  -- PHONE phone=0x39 inflection=3
-        (ts_us=>   5023829, event=>2, data=>       220),  -- PHONE phone=0x1C inflection=3
-        (ts_us=>   5075554, event=>2, data=>       255)   -- PHONE phone=0x3F inflection=3
+        (ts_us=>    100135, event=>2, data=>       219),  -- PHONE phone=0x1B inflection=3
+        (ts_us=>    156660, event=>2, data=>       192),  -- PHONE phone=0x00 inflection=3
+        (ts_us=>    203483, event=>2, data=>       216),  -- PHONE phone=0x18 inflection=3
+        (ts_us=>    284260, event=>2, data=>       215),  -- PHONE phone=0x17 inflection=3
+        (ts_us=>    384260, event=>2, data=>       237),  -- PHONE phone=0x2D inflection=3
+        (ts_us=>    448061, event=>2, data=>       195),  -- PHONE phone=0x03 inflection=3
+        (ts_us=>    485183, event=>2, data=>       195),  -- PHONE phone=0x03 inflection=3
+        (ts_us=>    522306, event=>2, data=>       195),  -- PHONE phone=0x03 inflection=3
+        (ts_us=>    559429, event=>2, data=>       195),  -- PHONE phone=0x03 inflection=3
+        (ts_us=>    596551, event=>2, data=>       195),  -- PHONE phone=0x03 inflection=3
+        (ts_us=>    633675, event=>2, data=>       213),  -- PHONE phone=0x15 inflection=3
+        (ts_us=>    733675, event=>2, data=>       192),  -- PHONE phone=0x00 inflection=3
+        (ts_us=>    780498, event=>2, data=>       201),  -- PHONE phone=0x09 inflection=3
+        (ts_us=>    824897, event=>2, data=>       233),  -- PHONE phone=0x29 inflection=3
+        (ts_us=>    905675, event=>2, data=>       204),  -- PHONE phone=0x0C inflection=3
+        (ts_us=>    986453, event=>2, data=>       234),  -- PHONE phone=0x2A inflection=3
+        (ts_us=>   1042978, event=>2, data=>       250),  -- PHONE phone=0x3A inflection=3
+        (ts_us=>   1142978, event=>2, data=>       202),  -- PHONE phone=0x0A inflection=3
+        (ts_us=>   1206777, event=>2, data=>       205),  -- PHONE phone=0x0D inflection=3
+        (ts_us=>   1270576, event=>2, data=>       222),  -- PHONE phone=0x1E inflection=3
+        (ts_us=>   1314975, event=>2, data=>       228),  -- PHONE phone=0x24 inflection=3
+        (ts_us=>   1414975, event=>2, data=>       205),  -- PHONE phone=0x0D inflection=3
+        (ts_us=>   1478774, event=>2, data=>       255),  -- PHONE phone=0x3F inflection=3
+        (ts_us=>   1578774, event=>1, data=>   1038000),  -- CLOCK freq=1038000Hz
+        (ts_us=>   1578788, event=>2, data=>       193),  -- PHONE phone=0x01 inflection=3
+        (ts_us=>   1630560, event=>3, data=>         0),  -- INFLECTION inflection=0
+        (ts_us=>   1630560, event=>2, data=>        63),  -- PHONE phone=0x3F inflection=0
+        (ts_us=>   1664576, event=>2, data=>        63),  -- PHONE phone=0x3F inflection=0
+        (ts_us=>   1698590, event=>2, data=>        63),  -- PHONE phone=0x3F inflection=0
+        (ts_us=>   1732606, event=>2, data=>        63),  -- PHONE phone=0x3F inflection=0
+        (ts_us=>   1766620, event=>2, data=>        63),  -- PHONE phone=0x3F inflection=0
+        (ts_us=>   1800636, event=>2, data=>        63),  -- PHONE phone=0x3F inflection=0
+        (ts_us=>   1834650, event=>2, data=>        63),  -- PHONE phone=0x3F inflection=0
+        (ts_us=>   1868664, event=>2, data=>        63),  -- PHONE phone=0x3F inflection=0
+        (ts_us=>   1902680, event=>3, data=>         2),  -- INFLECTION inflection=2
+        (ts_us=>   1902680, event=>2, data=>       191),  -- PHONE phone=0x3F inflection=2
+        (ts_us=>   1936695, event=>3, data=>         3),  -- INFLECTION inflection=3
+        (ts_us=>   1936695, event=>2, data=>       255),  -- PHONE phone=0x3F inflection=3
+        (ts_us=>   1970666, event=>2, data=>       255),  -- PHONE phone=0x3F inflection=3
+        (ts_us=>   2070666, event=>2, data=>       193),  -- PHONE phone=0x01 inflection=3
+        (ts_us=>   2122438, event=>2, data=>       223),  -- PHONE phone=0x1F inflection=3
+        (ts_us=>   2187528, event=>2, data=>       207),  -- PHONE phone=0x0F inflection=3
+        (ts_us=>   2239299, event=>2, data=>       199),  -- PHONE phone=0x07 inflection=3
+        (ts_us=>   2304389, event=>2, data=>       195),  -- PHONE phone=0x03 inflection=3
+        (ts_us=>   2338404, event=>2, data=>       193),  -- PHONE phone=0x01 inflection=3
+        (ts_us=>   2390175, event=>3, data=>         1),  -- INFLECTION inflection=1
+        (ts_us=>   2390175, event=>2, data=>        64),  -- PHONE phone=0x00 inflection=1
+        (ts_us=>   2433067, event=>3, data=>         0),  -- INFLECTION inflection=0
+        (ts_us=>   2433067, event=>2, data=>         0),  -- PHONE phone=0x00 inflection=0
+        (ts_us=>   2475958, event=>2, data=>        32),  -- PHONE phone=0x20 inflection=0
+        (ts_us=>   2575958, event=>2, data=>        48),  -- PHONE phone=0x30 inflection=0
+        (ts_us=>   2641048, event=>2, data=>        56),  -- PHONE phone=0x38 inflection=0
+        (ts_us=>   2699432, event=>3, data=>         3),  -- INFLECTION inflection=3
+        (ts_us=>   2699432, event=>2, data=>       255),  -- PHONE phone=0x3F inflection=3
+        (ts_us=>   2799432, event=>2, data=>       193),  -- PHONE phone=0x01 inflection=3
+        (ts_us=>   2799457, event=>1, data=>   1472500),  -- CLOCK freq=1472500Hz
+        (ts_us=>   2807150, event=>1, data=>   1467000),  -- CLOCK freq=1467000Hz
+        (ts_us=>   2814874, event=>1, data=>   1461500),  -- CLOCK freq=1461500Hz
+        (ts_us=>   2822598, event=>1, data=>   1456000),  -- CLOCK freq=1456000Hz
+        (ts_us=>   2830322, event=>1, data=>   1450500),  -- CLOCK freq=1450500Hz
+        (ts_us=>   2838046, event=>1, data=>   1445000),  -- CLOCK freq=1445000Hz
+        (ts_us=>   2845770, event=>1, data=>   1439500),  -- CLOCK freq=1439500Hz
+        (ts_us=>   2853494, event=>1, data=>   1434000),  -- CLOCK freq=1434000Hz
+        (ts_us=>   2861217, event=>1, data=>   1428500),  -- CLOCK freq=1428500Hz
+        (ts_us=>   2868941, event=>1, data=>   1423000),  -- CLOCK freq=1423000Hz
+        (ts_us=>   2876665, event=>1, data=>   1417500),  -- CLOCK freq=1417500Hz
+        (ts_us=>   2884389, event=>1, data=>   1412000),  -- CLOCK freq=1412000Hz
+        (ts_us=>   2892113, event=>1, data=>   1406500),  -- CLOCK freq=1406500Hz
+        (ts_us=>   2899837, event=>1, data=>   1401000),  -- CLOCK freq=1401000Hz
+        (ts_us=>   2907561, event=>1, data=>   1395500),  -- CLOCK freq=1395500Hz
+        (ts_us=>   2915285, event=>1, data=>   1390000),  -- CLOCK freq=1390000Hz
+        (ts_us=>   2923009, event=>1, data=>   1384500),  -- CLOCK freq=1384500Hz
+        (ts_us=>   2930732, event=>1, data=>   1379000),  -- CLOCK freq=1379000Hz
+        (ts_us=>   2938456, event=>1, data=>   1373500),  -- CLOCK freq=1373500Hz
+        (ts_us=>   2946180, event=>1, data=>   1368000),  -- CLOCK freq=1368000Hz
+        (ts_us=>   2953904, event=>1, data=>   1362500),  -- CLOCK freq=1362500Hz
+        (ts_us=>   2961628, event=>1, data=>   1357000),  -- CLOCK freq=1357000Hz
+        (ts_us=>   2969352, event=>1, data=>   1351500),  -- CLOCK freq=1351500Hz
+        (ts_us=>   2977076, event=>1, data=>   1346000),  -- CLOCK freq=1346000Hz
+        (ts_us=>   2984800, event=>1, data=>   1340500),  -- CLOCK freq=1340500Hz
+        (ts_us=>   2992524, event=>1, data=>   1335000),  -- CLOCK freq=1335000Hz
+        (ts_us=>   3000247, event=>1, data=>   1329500),  -- CLOCK freq=1329500Hz
+        (ts_us=>   3007971, event=>1, data=>   1324000),  -- CLOCK freq=1324000Hz
+        (ts_us=>   3015695, event=>1, data=>   1318500),  -- CLOCK freq=1318500Hz
+        (ts_us=>   3023419, event=>1, data=>   1313000),  -- CLOCK freq=1313000Hz
+        (ts_us=>   3031143, event=>1, data=>   1307500),  -- CLOCK freq=1307500Hz
+        (ts_us=>   3038867, event=>1, data=>   1302000),  -- CLOCK freq=1302000Hz
+        (ts_us=>   3046591, event=>1, data=>   1296500),  -- CLOCK freq=1296500Hz
+        (ts_us=>   3054315, event=>1, data=>   1291000),  -- CLOCK freq=1291000Hz
+        (ts_us=>   3062039, event=>1, data=>   1285500),  -- CLOCK freq=1285500Hz
+        (ts_us=>   3069762, event=>1, data=>   1280000),  -- CLOCK freq=1280000Hz
+        (ts_us=>   3077486, event=>1, data=>   1274500),  -- CLOCK freq=1274500Hz
+        (ts_us=>   3085210, event=>1, data=>   1269000),  -- CLOCK freq=1269000Hz
+        (ts_us=>   3092934, event=>1, data=>   1263500),  -- CLOCK freq=1263500Hz
+        (ts_us=>   3100658, event=>1, data=>   1258000),  -- CLOCK freq=1258000Hz
+        (ts_us=>   3108382, event=>1, data=>   1252500),  -- CLOCK freq=1252500Hz
+        (ts_us=>   3116106, event=>1, data=>   1247000),  -- CLOCK freq=1247000Hz
+        (ts_us=>   3123830, event=>1, data=>   1241500),  -- CLOCK freq=1241500Hz
+        (ts_us=>   3131554, event=>1, data=>   1236000),  -- CLOCK freq=1236000Hz
+        (ts_us=>   3139277, event=>1, data=>   1230500),  -- CLOCK freq=1230500Hz
+        (ts_us=>   3147001, event=>1, data=>   1225000),  -- CLOCK freq=1225000Hz
+        (ts_us=>   3154725, event=>1, data=>   1219500),  -- CLOCK freq=1219500Hz
+        (ts_us=>   3162449, event=>1, data=>   1214000),  -- CLOCK freq=1214000Hz
+        (ts_us=>   3170173, event=>1, data=>   1208500),  -- CLOCK freq=1208500Hz
+        (ts_us=>   3177897, event=>1, data=>   1203000),  -- CLOCK freq=1203000Hz
+        (ts_us=>   3185621, event=>1, data=>   1197500),  -- CLOCK freq=1197500Hz
+        (ts_us=>   3193345, event=>1, data=>   1192000),  -- CLOCK freq=1192000Hz
+        (ts_us=>   3201069, event=>1, data=>   1186500),  -- CLOCK freq=1186500Hz
+        (ts_us=>   3208792, event=>1, data=>   1181000),  -- CLOCK freq=1181000Hz
+        (ts_us=>   3216516, event=>1, data=>   1175500),  -- CLOCK freq=1175500Hz
+        (ts_us=>   3224240, event=>1, data=>   1170000),  -- CLOCK freq=1170000Hz
+        (ts_us=>   3231964, event=>1, data=>   1164500),  -- CLOCK freq=1164500Hz
+        (ts_us=>   3239688, event=>1, data=>   1159000),  -- CLOCK freq=1159000Hz
+        (ts_us=>   3247412, event=>1, data=>   1153500),  -- CLOCK freq=1153500Hz
+        (ts_us=>   3255136, event=>1, data=>   1148000),  -- CLOCK freq=1148000Hz
+        (ts_us=>   3262860, event=>1, data=>   1142500),  -- CLOCK freq=1142500Hz
+        (ts_us=>   3270584, event=>1, data=>   1137000),  -- CLOCK freq=1137000Hz
+        (ts_us=>   3278307, event=>1, data=>   1131500),  -- CLOCK freq=1131500Hz
+        (ts_us=>   3286031, event=>1, data=>   1126000),  -- CLOCK freq=1126000Hz
+        (ts_us=>   3293755, event=>1, data=>   1120500),  -- CLOCK freq=1120500Hz
+        (ts_us=>   3301479, event=>1, data=>   1115000),  -- CLOCK freq=1115000Hz
+        (ts_us=>   3309203, event=>1, data=>   1109500),  -- CLOCK freq=1109500Hz
+        (ts_us=>   3316927, event=>1, data=>   1104000),  -- CLOCK freq=1104000Hz
+        (ts_us=>   3324651, event=>1, data=>   1098500),  -- CLOCK freq=1098500Hz
+        (ts_us=>   3332375, event=>1, data=>   1093000),  -- CLOCK freq=1093000Hz
+        (ts_us=>   3340099, event=>1, data=>   1087500),  -- CLOCK freq=1087500Hz
+        (ts_us=>   3347822, event=>1, data=>   1082000),  -- CLOCK freq=1082000Hz
+        (ts_us=>   3355546, event=>1, data=>   1076500),  -- CLOCK freq=1076500Hz
+        (ts_us=>   3363270, event=>1, data=>   1071000),  -- CLOCK freq=1071000Hz
+        (ts_us=>   3370994, event=>1, data=>   1065500),  -- CLOCK freq=1065500Hz
+        (ts_us=>   3378718, event=>1, data=>   1060000),  -- CLOCK freq=1060000Hz
+        (ts_us=>   3386442, event=>1, data=>   1054500),  -- CLOCK freq=1054500Hz
+        (ts_us=>   3394166, event=>1, data=>   1049000),  -- CLOCK freq=1049000Hz
+        (ts_us=>   3401890, event=>1, data=>   1043500),  -- CLOCK freq=1043500Hz
+        (ts_us=>   3409614, event=>1, data=>   1038000),  -- CLOCK freq=1038000Hz
+        (ts_us=>   3417337, event=>1, data=>   1032500),  -- CLOCK freq=1032500Hz
+        (ts_us=>   3425061, event=>1, data=>   1027000),  -- CLOCK freq=1027000Hz
+        (ts_us=>   3432785, event=>1, data=>   1021500),  -- CLOCK freq=1021500Hz
+        (ts_us=>   3440509, event=>1, data=>   1016000),  -- CLOCK freq=1016000Hz
+        (ts_us=>   3448233, event=>1, data=>   1010500),  -- CLOCK freq=1010500Hz
+        (ts_us=>   3455957, event=>1, data=>   1005000),  -- CLOCK freq=1005000Hz
+        (ts_us=>   3463681, event=>1, data=>    999500),  -- CLOCK freq=999500Hz
+        (ts_us=>   3471405, event=>1, data=>    994000),  -- CLOCK freq=994000Hz
+        (ts_us=>   3479129, event=>1, data=>    988500),  -- CLOCK freq=988500Hz
+        (ts_us=>   3486852, event=>1, data=>    983000),  -- CLOCK freq=983000Hz
+        (ts_us=>   3494576, event=>1, data=>    977500),  -- CLOCK freq=977500Hz
+        (ts_us=>   3502300, event=>1, data=>    972000),  -- CLOCK freq=972000Hz
+        (ts_us=>   3510024, event=>1, data=>    966500),  -- CLOCK freq=966500Hz
+        (ts_us=>   3517748, event=>1, data=>    961000),  -- CLOCK freq=961000Hz
+        (ts_us=>   3525472, event=>1, data=>    955500),  -- CLOCK freq=955500Hz
+        (ts_us=>   3533196, event=>1, data=>    950000),  -- CLOCK freq=950000Hz
+        (ts_us=>   3540920, event=>1, data=>    944500),  -- CLOCK freq=944500Hz
+        (ts_us=>   3548644, event=>1, data=>    939000),  -- CLOCK freq=939000Hz
+        (ts_us=>   3556367, event=>1, data=>    933500),  -- CLOCK freq=933500Hz
+        (ts_us=>   3564091, event=>1, data=>    928000),  -- CLOCK freq=928000Hz
+        (ts_us=>   3571815, event=>1, data=>    922500),  -- CLOCK freq=922500Hz
+        (ts_us=>   3579539, event=>1, data=>    917000),  -- CLOCK freq=917000Hz
+        (ts_us=>   3587263, event=>1, data=>    911500),  -- CLOCK freq=911500Hz
+        (ts_us=>   3594987, event=>1, data=>    906000),  -- CLOCK freq=906000Hz
+        (ts_us=>   3602711, event=>1, data=>    900500),  -- CLOCK freq=900500Hz
+        (ts_us=>   3610435, event=>1, data=>    895000),  -- CLOCK freq=895000Hz
+        (ts_us=>   3618159, event=>1, data=>    889500),  -- CLOCK freq=889500Hz
+        (ts_us=>   3625882, event=>1, data=>    884000),  -- CLOCK freq=884000Hz
+        (ts_us=>   3633606, event=>1, data=>    878500),  -- CLOCK freq=878500Hz
+        (ts_us=>   3641330, event=>1, data=>    873000),  -- CLOCK freq=873000Hz
+        (ts_us=>   3649054, event=>1, data=>    867500),  -- CLOCK freq=867500Hz
+        (ts_us=>   3656778, event=>1, data=>    862000),  -- CLOCK freq=862000Hz
+        (ts_us=>   3664502, event=>1, data=>    856500),  -- CLOCK freq=856500Hz
+        (ts_us=>   3672226, event=>1, data=>    851000),  -- CLOCK freq=851000Hz
+        (ts_us=>   3679950, event=>1, data=>    845500),  -- CLOCK freq=845500Hz
+        (ts_us=>   3687674, event=>1, data=>    840000),  -- CLOCK freq=840000Hz
+        (ts_us=>   3695397, event=>1, data=>    834500),  -- CLOCK freq=834500Hz
+        (ts_us=>   3703121, event=>1, data=>    829000),  -- CLOCK freq=829000Hz
+        (ts_us=>   3710845, event=>1, data=>    823500),  -- CLOCK freq=823500Hz
+        (ts_us=>   3718569, event=>1, data=>    818000),  -- CLOCK freq=818000Hz
+        (ts_us=>   3726293, event=>1, data=>    812500),  -- CLOCK freq=812500Hz
+        (ts_us=>   3734017, event=>1, data=>    807000),  -- CLOCK freq=807000Hz
+        (ts_us=>   3741741, event=>1, data=>    801500),  -- CLOCK freq=801500Hz
+        (ts_us=>   3749465, event=>1, data=>    796000),  -- CLOCK freq=796000Hz
+        (ts_us=>   3757189, event=>1, data=>    790500),  -- CLOCK freq=790500Hz
+        (ts_us=>   3764912, event=>1, data=>    785000),  -- CLOCK freq=785000Hz
+        (ts_us=>   3772636, event=>1, data=>    779500),  -- CLOCK freq=779500Hz
+        (ts_us=>   3780360, event=>1, data=>    774000),  -- CLOCK freq=774000Hz
+        (ts_us=>   3788084, event=>1, data=>    768500),  -- CLOCK freq=768500Hz
+        (ts_us=>   3795808, event=>1, data=>    763000),  -- CLOCK freq=763000Hz
+        (ts_us=>   3803532, event=>1, data=>    757500),  -- CLOCK freq=757500Hz
+        (ts_us=>   3811256, event=>1, data=>    752000),  -- CLOCK freq=752000Hz
+        (ts_us=>   3818980, event=>1, data=>    746500),  -- CLOCK freq=746500Hz
+        (ts_us=>   3826704, event=>1, data=>    741000),  -- CLOCK freq=741000Hz
+        (ts_us=>   3834427, event=>1, data=>    735500),  -- CLOCK freq=735500Hz
+        (ts_us=>   3842151, event=>1, data=>    730000),  -- CLOCK freq=730000Hz
+        (ts_us=>   3849875, event=>1, data=>    724500),  -- CLOCK freq=724500Hz
+        (ts_us=>   3857599, event=>1, data=>    719000),  -- CLOCK freq=719000Hz
+        (ts_us=>   3865323, event=>1, data=>    713500),  -- CLOCK freq=713500Hz
+        (ts_us=>   3873047, event=>1, data=>    708000),  -- CLOCK freq=708000Hz
+        (ts_us=>   3880771, event=>1, data=>    702500),  -- CLOCK freq=702500Hz
+        (ts_us=>   3888495, event=>1, data=>    697000),  -- CLOCK freq=697000Hz
+        (ts_us=>   3896219, event=>1, data=>    691500),  -- CLOCK freq=691500Hz
+        (ts_us=>   3903942, event=>1, data=>    686000),  -- CLOCK freq=686000Hz
+        (ts_us=>   3911666, event=>1, data=>    680500),  -- CLOCK freq=680500Hz
+        (ts_us=>   3919390, event=>1, data=>    675000),  -- CLOCK freq=675000Hz
+        (ts_us=>   3927114, event=>1, data=>    669500),  -- CLOCK freq=669500Hz
+        (ts_us=>   3934838, event=>1, data=>    664000),  -- CLOCK freq=664000Hz
+        (ts_us=>   3942562, event=>1, data=>    658500),  -- CLOCK freq=658500Hz
+        (ts_us=>   3950286, event=>1, data=>    653000),  -- CLOCK freq=653000Hz
+        (ts_us=>   3958010, event=>1, data=>    647500),  -- CLOCK freq=647500Hz
+        (ts_us=>   3965734, event=>1, data=>    642000),  -- CLOCK freq=642000Hz
+        (ts_us=>   3973457, event=>1, data=>    636500),  -- CLOCK freq=636500Hz
+        (ts_us=>   3981181, event=>1, data=>    631000),  -- CLOCK freq=631000Hz
+        (ts_us=>   3988905, event=>1, data=>    625500),  -- CLOCK freq=625500Hz
+        (ts_us=>   3996629, event=>1, data=>    620000),  -- CLOCK freq=620000Hz
+        (ts_us=>   4004353, event=>1, data=>    614500),  -- CLOCK freq=614500Hz
+        (ts_us=>   4012077, event=>1, data=>    609000),  -- CLOCK freq=609000Hz
+        (ts_us=>   4019801, event=>1, data=>    603500),  -- CLOCK freq=603500Hz
+        (ts_us=>   4027525, event=>1, data=>    598000),  -- CLOCK freq=598000Hz
+        (ts_us=>   4035249, event=>1, data=>    592500),  -- CLOCK freq=592500Hz
+        (ts_us=>   4042972, event=>1, data=>    587000),  -- CLOCK freq=587000Hz
+        (ts_us=>   4050696, event=>1, data=>    581500),  -- CLOCK freq=581500Hz
+        (ts_us=>   4058420, event=>1, data=>    576000),  -- CLOCK freq=576000Hz
+        (ts_us=>   4066144, event=>1, data=>    570500),  -- CLOCK freq=570500Hz
+        (ts_us=>   4073868, event=>1, data=>    565000),  -- CLOCK freq=565000Hz
+        (ts_us=>   4081592, event=>1, data=>    559500),  -- CLOCK freq=559500Hz
+        (ts_us=>   4089316, event=>1, data=>    554000),  -- CLOCK freq=554000Hz
+        (ts_us=>   4097040, event=>1, data=>    548500),  -- CLOCK freq=548500Hz
+        (ts_us=>   4104764, event=>1, data=>    543000),  -- CLOCK freq=543000Hz
+        (ts_us=>   4112487, event=>1, data=>    537500),  -- CLOCK freq=537500Hz
+        (ts_us=>   4120211, event=>1, data=>    532000),  -- CLOCK freq=532000Hz
+        (ts_us=>   4127935, event=>1, data=>    526500),  -- CLOCK freq=526500Hz
+        (ts_us=>   4135659, event=>1, data=>    521000),  -- CLOCK freq=521000Hz
+        (ts_us=>   4143383, event=>1, data=>    515500),  -- CLOCK freq=515500Hz
+        (ts_us=>   4151107, event=>1, data=>    510000),  -- CLOCK freq=510000Hz
+        (ts_us=>   4158831, event=>1, data=>    504500),  -- CLOCK freq=504500Hz
+        (ts_us=>   4166555, event=>1, data=>    499000),  -- CLOCK freq=499000Hz
+        (ts_us=>   4174279, event=>1, data=>    493500),  -- CLOCK freq=493500Hz
+        (ts_us=>   4182002, event=>1, data=>    488000),  -- CLOCK freq=488000Hz
+        (ts_us=>   4189726, event=>1, data=>    482500),  -- CLOCK freq=482500Hz
+        (ts_us=>   4197450, event=>1, data=>    477000),  -- CLOCK freq=477000Hz
+        (ts_us=>   4205174, event=>1, data=>    471500),  -- CLOCK freq=471500Hz
+        (ts_us=>   4212898, event=>1, data=>    466000),  -- CLOCK freq=466000Hz
+        (ts_us=>   4220622, event=>1, data=>    460500),  -- CLOCK freq=460500Hz
+        (ts_us=>   4228346, event=>1, data=>    455000),  -- CLOCK freq=455000Hz
+        (ts_us=>   4236070, event=>1, data=>    449500),  -- CLOCK freq=449500Hz
+        (ts_us=>   4243794, event=>1, data=>    444000),  -- CLOCK freq=444000Hz
+        (ts_us=>   4251517, event=>1, data=>    438500),  -- CLOCK freq=438500Hz
+        (ts_us=>   4259241, event=>1, data=>    433000),  -- CLOCK freq=433000Hz
+        (ts_us=>   4266965, event=>1, data=>    427500),  -- CLOCK freq=427500Hz
+        (ts_us=>   4274689, event=>1, data=>    422000),  -- CLOCK freq=422000Hz
+        (ts_us=>   4281039, event=>2, data=>       255),  -- PHONE phone=0x3F inflection=3
+        (ts_us=>   4381039, event=>2, data=>       255),  -- PHONE phone=0x3F inflection=3
+        (ts_us=>   4481039, event=>2, data=>       245),  -- PHONE phone=0x35 inflection=3
+        (ts_us=>   4481150, event=>1, data=>    950000),  -- CLOCK freq=950000Hz
+        (ts_us=>   4482176, event=>1, data=>    955500),  -- CLOCK freq=955500Hz
+        (ts_us=>   4485139, event=>1, data=>    961000),  -- CLOCK freq=961000Hz
+        (ts_us=>   4487989, event=>1, data=>    966500),  -- CLOCK freq=966500Hz
+        (ts_us=>   4490952, event=>1, data=>    972000),  -- CLOCK freq=972000Hz
+        (ts_us=>   4493802, event=>1, data=>    977500),  -- CLOCK freq=977500Hz
+        (ts_us=>   4496765, event=>1, data=>    983000),  -- CLOCK freq=983000Hz
+        (ts_us=>   4499729, event=>1, data=>    988500),  -- CLOCK freq=988500Hz
+        (ts_us=>   4502578, event=>1, data=>    994000),  -- CLOCK freq=994000Hz
+        (ts_us=>   4505542, event=>1, data=>    999500),  -- CLOCK freq=999500Hz
+        (ts_us=>   4508391, event=>1, data=>   1005000),  -- CLOCK freq=1005000Hz
+        (ts_us=>   4511355, event=>1, data=>   1010500),  -- CLOCK freq=1010500Hz
+        (ts_us=>   4514318, event=>1, data=>   1016000),  -- CLOCK freq=1016000Hz
+        (ts_us=>   4517168, event=>1, data=>   1021500),  -- CLOCK freq=1021500Hz
+        (ts_us=>   4520131, event=>1, data=>   1027000),  -- CLOCK freq=1027000Hz
+        (ts_us=>   4522981, event=>1, data=>   1032500),  -- CLOCK freq=1032500Hz
+        (ts_us=>   4525945, event=>1, data=>   1038000),  -- CLOCK freq=1038000Hz
+        (ts_us=>   4528908, event=>1, data=>   1043500),  -- CLOCK freq=1043500Hz
+        (ts_us=>   4531758, event=>1, data=>   1049000),  -- CLOCK freq=1049000Hz
+        (ts_us=>   4534721, event=>1, data=>   1054500),  -- CLOCK freq=1054500Hz
+        (ts_us=>   4537571, event=>1, data=>   1060000),  -- CLOCK freq=1060000Hz
+        (ts_us=>   4540534, event=>1, data=>   1065500),  -- CLOCK freq=1065500Hz
+        (ts_us=>   4543498, event=>1, data=>   1071000),  -- CLOCK freq=1071000Hz
+        (ts_us=>   4546347, event=>1, data=>   1076500),  -- CLOCK freq=1076500Hz
+        (ts_us=>   4549311, event=>1, data=>   1082000),  -- CLOCK freq=1082000Hz
+        (ts_us=>   4552160, event=>1, data=>   1087500),  -- CLOCK freq=1087500Hz
+        (ts_us=>   4555124, event=>1, data=>   1093000),  -- CLOCK freq=1093000Hz
+        (ts_us=>   4558087, event=>1, data=>   1098500),  -- CLOCK freq=1098500Hz
+        (ts_us=>   4560937, event=>1, data=>   1104000),  -- CLOCK freq=1104000Hz
+        (ts_us=>   4563900, event=>1, data=>   1109500),  -- CLOCK freq=1109500Hz
+        (ts_us=>   4566750, event=>1, data=>   1115000),  -- CLOCK freq=1115000Hz
+        (ts_us=>   4569713, event=>1, data=>   1120500),  -- CLOCK freq=1120500Hz
+        (ts_us=>   4572677, event=>1, data=>   1126000),  -- CLOCK freq=1126000Hz
+        (ts_us=>   4575526, event=>1, data=>   1131500),  -- CLOCK freq=1131500Hz
+        (ts_us=>   4578490, event=>1, data=>   1137000),  -- CLOCK freq=1137000Hz
+        (ts_us=>   4581339, event=>1, data=>   1142500),  -- CLOCK freq=1142500Hz
+        (ts_us=>   4584303, event=>1, data=>   1148000),  -- CLOCK freq=1148000Hz
+        (ts_us=>   4587266, event=>1, data=>   1153500),  -- CLOCK freq=1153500Hz
+        (ts_us=>   4590116, event=>1, data=>   1159000),  -- CLOCK freq=1159000Hz
+        (ts_us=>   4593079, event=>1, data=>   1164500),  -- CLOCK freq=1164500Hz
+        (ts_us=>   4595929, event=>1, data=>   1170000),  -- CLOCK freq=1170000Hz
+        (ts_us=>   4598892, event=>1, data=>   1175500),  -- CLOCK freq=1175500Hz
+        (ts_us=>   4601856, event=>1, data=>   1181000),  -- CLOCK freq=1181000Hz
+        (ts_us=>   4604705, event=>1, data=>   1186500),  -- CLOCK freq=1186500Hz
+        (ts_us=>   4607669, event=>1, data=>   1192000),  -- CLOCK freq=1192000Hz
+        (ts_us=>   4610518, event=>1, data=>   1197500),  -- CLOCK freq=1197500Hz
+        (ts_us=>   4613482, event=>1, data=>   1203000),  -- CLOCK freq=1203000Hz
+        (ts_us=>   4616445, event=>1, data=>   1208500),  -- CLOCK freq=1208500Hz
+        (ts_us=>   4619295, event=>1, data=>   1214000),  -- CLOCK freq=1214000Hz
+        (ts_us=>   4622258, event=>1, data=>   1219500),  -- CLOCK freq=1219500Hz
+        (ts_us=>   4625108, event=>1, data=>   1225000),  -- CLOCK freq=1225000Hz
+        (ts_us=>   4628071, event=>1, data=>   1230500),  -- CLOCK freq=1230500Hz
+        (ts_us=>   4631035, event=>1, data=>   1236000),  -- CLOCK freq=1236000Hz
+        (ts_us=>   4633885, event=>1, data=>   1241500),  -- CLOCK freq=1241500Hz
+        (ts_us=>   4636848, event=>1, data=>   1247000),  -- CLOCK freq=1247000Hz
+        (ts_us=>   4639698, event=>1, data=>   1252500),  -- CLOCK freq=1252500Hz
+        (ts_us=>   4642661, event=>1, data=>   1258000),  -- CLOCK freq=1258000Hz
+        (ts_us=>   4645625, event=>1, data=>   1263500),  -- CLOCK freq=1263500Hz
+        (ts_us=>   4648474, event=>1, data=>   1269000),  -- CLOCK freq=1269000Hz
+        (ts_us=>   4651438, event=>1, data=>   1274500),  -- CLOCK freq=1274500Hz
+        (ts_us=>   4654287, event=>1, data=>   1280000),  -- CLOCK freq=1280000Hz
+        (ts_us=>   4657251, event=>1, data=>   1285500),  -- CLOCK freq=1285500Hz
+        (ts_us=>   4660214, event=>1, data=>   1291000),  -- CLOCK freq=1291000Hz
+        (ts_us=>   4663064, event=>1, data=>   1296500),  -- CLOCK freq=1296500Hz
+        (ts_us=>   4666027, event=>1, data=>   1302000),  -- CLOCK freq=1302000Hz
+        (ts_us=>   4668877, event=>1, data=>   1307500),  -- CLOCK freq=1307500Hz
+        (ts_us=>   4671840, event=>1, data=>   1313000),  -- CLOCK freq=1313000Hz
+        (ts_us=>   4674804, event=>1, data=>   1318500),  -- CLOCK freq=1318500Hz
+        (ts_us=>   4677653, event=>1, data=>   1324000),  -- CLOCK freq=1324000Hz
+        (ts_us=>   4680617, event=>1, data=>   1329500),  -- CLOCK freq=1329500Hz
+        (ts_us=>   4683466, event=>1, data=>   1335000),  -- CLOCK freq=1335000Hz
+        (ts_us=>   4686430, event=>1, data=>   1340500),  -- CLOCK freq=1340500Hz
+        (ts_us=>   4689393, event=>1, data=>   1346000),  -- CLOCK freq=1346000Hz
+        (ts_us=>   4692243, event=>1, data=>   1351500),  -- CLOCK freq=1351500Hz
+        (ts_us=>   4695206, event=>1, data=>   1357000),  -- CLOCK freq=1357000Hz
+        (ts_us=>   4698056, event=>1, data=>   1362500),  -- CLOCK freq=1362500Hz
+        (ts_us=>   4701019, event=>1, data=>   1368000),  -- CLOCK freq=1368000Hz
+        (ts_us=>   4703983, event=>1, data=>   1373500),  -- CLOCK freq=1373500Hz
+        (ts_us=>   4706832, event=>1, data=>   1379000),  -- CLOCK freq=1379000Hz
+        (ts_us=>   4709796, event=>1, data=>   1384500),  -- CLOCK freq=1384500Hz
+        (ts_us=>   4712645, event=>1, data=>   1390000),  -- CLOCK freq=1390000Hz
+        (ts_us=>   4715609, event=>1, data=>   1395500),  -- CLOCK freq=1395500Hz
+        (ts_us=>   4718572, event=>1, data=>   1401000),  -- CLOCK freq=1401000Hz
+        (ts_us=>   4721422, event=>1, data=>   1406500),  -- CLOCK freq=1406500Hz
+        (ts_us=>   4724385, event=>1, data=>   1412000),  -- CLOCK freq=1412000Hz
+        (ts_us=>   4727235, event=>1, data=>   1417500),  -- CLOCK freq=1417500Hz
+        (ts_us=>   4730198, event=>1, data=>   1423000),  -- CLOCK freq=1423000Hz
+        (ts_us=>   4733162, event=>1, data=>   1428500),  -- CLOCK freq=1428500Hz
+        (ts_us=>   4736011, event=>1, data=>   1434000),  -- CLOCK freq=1434000Hz
+        (ts_us=>   4738975, event=>1, data=>   1439500),  -- CLOCK freq=1439500Hz
+        (ts_us=>   4741825, event=>1, data=>   1445000),  -- CLOCK freq=1445000Hz
+        (ts_us=>   4744788, event=>1, data=>   1450500),  -- CLOCK freq=1450500Hz
+        (ts_us=>   4747752, event=>1, data=>   1456000),  -- CLOCK freq=1456000Hz
+        (ts_us=>   4750601, event=>1, data=>   1461500),  -- CLOCK freq=1461500Hz
+        (ts_us=>   4753565, event=>1, data=>   1467000),  -- CLOCK freq=1467000Hz
+        (ts_us=>   4756414, event=>1, data=>   1472500),  -- CLOCK freq=1472500Hz
+        (ts_us=>   4756537, event=>1, data=>   1467000),  -- CLOCK freq=1467000Hz
+        (ts_us=>   4766225, event=>1, data=>   1461500),  -- CLOCK freq=1461500Hz
+        (ts_us=>   4775914, event=>1, data=>   1456000),  -- CLOCK freq=1456000Hz
+        (ts_us=>   4785716, event=>1, data=>   1450500),  -- CLOCK freq=1450500Hz
+        (ts_us=>   4795405, event=>1, data=>   1445000),  -- CLOCK freq=1445000Hz
+        (ts_us=>   4805093, event=>1, data=>   1439500),  -- CLOCK freq=1439500Hz
+        (ts_us=>   4814895, event=>1, data=>   1434000),  -- CLOCK freq=1434000Hz
+        (ts_us=>   4824584, event=>1, data=>   1428500),  -- CLOCK freq=1428500Hz
+        (ts_us=>   4834272, event=>1, data=>   1423000),  -- CLOCK freq=1423000Hz
+        (ts_us=>   4844074, event=>1, data=>   1417500),  -- CLOCK freq=1417500Hz
+        (ts_us=>   4853763, event=>1, data=>   1412000),  -- CLOCK freq=1412000Hz
+        (ts_us=>   4863451, event=>1, data=>   1406500),  -- CLOCK freq=1406500Hz
+        (ts_us=>   4873254, event=>1, data=>   1401000),  -- CLOCK freq=1401000Hz
+        (ts_us=>   4882942, event=>1, data=>   1395500),  -- CLOCK freq=1395500Hz
+        (ts_us=>   4892630, event=>1, data=>   1390000),  -- CLOCK freq=1390000Hz
+        (ts_us=>   4902433, event=>1, data=>   1384500),  -- CLOCK freq=1384500Hz
+        (ts_us=>   4912121, event=>1, data=>   1379000),  -- CLOCK freq=1379000Hz
+        (ts_us=>   4921809, event=>1, data=>   1373500),  -- CLOCK freq=1373500Hz
+        (ts_us=>   4931612, event=>1, data=>   1368000),  -- CLOCK freq=1368000Hz
+        (ts_us=>   4941300, event=>1, data=>   1362500),  -- CLOCK freq=1362500Hz
+        (ts_us=>   4950989, event=>1, data=>   1357000),  -- CLOCK freq=1357000Hz
+        (ts_us=>   4960791, event=>1, data=>   1351500),  -- CLOCK freq=1351500Hz
+        (ts_us=>   4970479, event=>1, data=>   1346000),  -- CLOCK freq=1346000Hz
+        (ts_us=>   4980168, event=>1, data=>   1340500),  -- CLOCK freq=1340500Hz
+        (ts_us=>   4989970, event=>1, data=>   1335000),  -- CLOCK freq=1335000Hz
+        (ts_us=>   4999658, event=>1, data=>   1329500),  -- CLOCK freq=1329500Hz
+        (ts_us=>   5009347, event=>1, data=>   1324000),  -- CLOCK freq=1324000Hz
+        (ts_us=>   5019149, event=>1, data=>   1318500),  -- CLOCK freq=1318500Hz
+        (ts_us=>   5028838, event=>1, data=>   1313000),  -- CLOCK freq=1313000Hz
+        (ts_us=>   5038526, event=>1, data=>   1307500),  -- CLOCK freq=1307500Hz
+        (ts_us=>   5048328, event=>1, data=>   1302000),  -- CLOCK freq=1302000Hz
+        (ts_us=>   5058017, event=>1, data=>   1296500),  -- CLOCK freq=1296500Hz
+        (ts_us=>   5067705, event=>1, data=>   1291000),  -- CLOCK freq=1291000Hz
+        (ts_us=>   5077508, event=>1, data=>   1285500),  -- CLOCK freq=1285500Hz
+        (ts_us=>   5087196, event=>1, data=>   1280000),  -- CLOCK freq=1280000Hz
+        (ts_us=>   5096884, event=>1, data=>   1274500),  -- CLOCK freq=1274500Hz
+        (ts_us=>   5106687, event=>1, data=>   1269000),  -- CLOCK freq=1269000Hz
+        (ts_us=>   5116375, event=>1, data=>   1263500),  -- CLOCK freq=1263500Hz
+        (ts_us=>   5126063, event=>1, data=>   1258000),  -- CLOCK freq=1258000Hz
+        (ts_us=>   5135866, event=>1, data=>   1252500),  -- CLOCK freq=1252500Hz
+        (ts_us=>   5145554, event=>1, data=>   1247000),  -- CLOCK freq=1247000Hz
+        (ts_us=>   5155243, event=>1, data=>   1241500),  -- CLOCK freq=1241500Hz
+        (ts_us=>   5165045, event=>1, data=>   1236000),  -- CLOCK freq=1236000Hz
+        (ts_us=>   5174733, event=>1, data=>   1230500),  -- CLOCK freq=1230500Hz
+        (ts_us=>   5184422, event=>1, data=>   1225000),  -- CLOCK freq=1225000Hz
+        (ts_us=>   5194224, event=>1, data=>   1219500),  -- CLOCK freq=1219500Hz
+        (ts_us=>   5203912, event=>1, data=>   1214000),  -- CLOCK freq=1214000Hz
+        (ts_us=>   5213601, event=>1, data=>   1208500),  -- CLOCK freq=1208500Hz
+        (ts_us=>   5223403, event=>1, data=>   1203000),  -- CLOCK freq=1203000Hz
+        (ts_us=>   5233092, event=>1, data=>   1197500),  -- CLOCK freq=1197500Hz
+        (ts_us=>   5242780, event=>1, data=>   1192000),  -- CLOCK freq=1192000Hz
+        (ts_us=>   5252582, event=>1, data=>   1186500),  -- CLOCK freq=1186500Hz
+        (ts_us=>   5262271, event=>1, data=>   1181000),  -- CLOCK freq=1181000Hz
+        (ts_us=>   5271959, event=>1, data=>   1175500),  -- CLOCK freq=1175500Hz
+        (ts_us=>   5281761, event=>1, data=>   1170000),  -- CLOCK freq=1170000Hz
+        (ts_us=>   5291450, event=>1, data=>   1164500),  -- CLOCK freq=1164500Hz
+        (ts_us=>   5301138, event=>1, data=>   1159000),  -- CLOCK freq=1159000Hz
+        (ts_us=>   5310941, event=>1, data=>   1153500),  -- CLOCK freq=1153500Hz
+        (ts_us=>   5320629, event=>1, data=>   1148000),  -- CLOCK freq=1148000Hz
+        (ts_us=>   5330317, event=>1, data=>   1142500),  -- CLOCK freq=1142500Hz
+        (ts_us=>   5340120, event=>1, data=>   1137000),  -- CLOCK freq=1137000Hz
+        (ts_us=>   5349808, event=>1, data=>   1131500),  -- CLOCK freq=1131500Hz
+        (ts_us=>   5359496, event=>1, data=>   1126000),  -- CLOCK freq=1126000Hz
+        (ts_us=>   5369299, event=>1, data=>   1120500),  -- CLOCK freq=1120500Hz
+        (ts_us=>   5378987, event=>1, data=>   1115000),  -- CLOCK freq=1115000Hz
+        (ts_us=>   5388676, event=>1, data=>   1109500),  -- CLOCK freq=1109500Hz
+        (ts_us=>   5398478, event=>1, data=>   1104000),  -- CLOCK freq=1104000Hz
+        (ts_us=>   5408166, event=>1, data=>   1098500),  -- CLOCK freq=1098500Hz
+        (ts_us=>   5417855, event=>1, data=>   1093000),  -- CLOCK freq=1093000Hz
+        (ts_us=>   5427657, event=>1, data=>   1087500),  -- CLOCK freq=1087500Hz
+        (ts_us=>   5437346, event=>1, data=>   1082000),  -- CLOCK freq=1082000Hz
+        (ts_us=>   5447034, event=>1, data=>   1076500),  -- CLOCK freq=1076500Hz
+        (ts_us=>   5456836, event=>1, data=>   1071000),  -- CLOCK freq=1071000Hz
+        (ts_us=>   5466525, event=>1, data=>   1065500),  -- CLOCK freq=1065500Hz
+        (ts_us=>   5476213, event=>1, data=>   1060000),  -- CLOCK freq=1060000Hz
+        (ts_us=>   5486015, event=>1, data=>   1054500),  -- CLOCK freq=1054500Hz
+        (ts_us=>   5495704, event=>1, data=>   1049000),  -- CLOCK freq=1049000Hz
+        (ts_us=>   5505392, event=>1, data=>   1043500),  -- CLOCK freq=1043500Hz
+        (ts_us=>   5515195, event=>1, data=>   1038000),  -- CLOCK freq=1038000Hz
+        (ts_us=>   5524883, event=>1, data=>   1032500),  -- CLOCK freq=1032500Hz
+        (ts_us=>   5534571, event=>1, data=>   1027000),  -- CLOCK freq=1027000Hz
+        (ts_us=>   5544374, event=>1, data=>   1021500),  -- CLOCK freq=1021500Hz
+        (ts_us=>   5554062, event=>1, data=>   1016000),  -- CLOCK freq=1016000Hz
+        (ts_us=>   5563750, event=>1, data=>   1010500),  -- CLOCK freq=1010500Hz
+        (ts_us=>   5573553, event=>1, data=>   1005000),  -- CLOCK freq=1005000Hz
+        (ts_us=>   5583241, event=>1, data=>    999500),  -- CLOCK freq=999500Hz
+        (ts_us=>   5592930, event=>1, data=>    994000),  -- CLOCK freq=994000Hz
+        (ts_us=>   5602732, event=>1, data=>    988500),  -- CLOCK freq=988500Hz
+        (ts_us=>   5612420, event=>1, data=>    983000),  -- CLOCK freq=983000Hz
+        (ts_us=>   5622109, event=>1, data=>    977500),  -- CLOCK freq=977500Hz
+        (ts_us=>   5631911, event=>1, data=>    972000),  -- CLOCK freq=972000Hz
+        (ts_us=>   5641599, event=>1, data=>    966500),  -- CLOCK freq=966500Hz
+        (ts_us=>   5651288, event=>1, data=>    961000),  -- CLOCK freq=961000Hz
+        (ts_us=>   5661090, event=>1, data=>    955500),  -- CLOCK freq=955500Hz
+        (ts_us=>   5670779, event=>1, data=>    950000),  -- CLOCK freq=950000Hz
+        (ts_us=>   5680467, event=>1, data=>    944500),  -- CLOCK freq=944500Hz
+        (ts_us=>   5690269, event=>1, data=>    939000),  -- CLOCK freq=939000Hz
+        (ts_us=>   5699958, event=>1, data=>    933500),  -- CLOCK freq=933500Hz
+        (ts_us=>   5709646, event=>1, data=>    928000),  -- CLOCK freq=928000Hz
+        (ts_us=>   5719448, event=>1, data=>    922500),  -- CLOCK freq=922500Hz
+        (ts_us=>   5729137, event=>1, data=>    917000),  -- CLOCK freq=917000Hz
+        (ts_us=>   5738825, event=>1, data=>    911500),  -- CLOCK freq=911500Hz
+        (ts_us=>   5748628, event=>1, data=>    906000),  -- CLOCK freq=906000Hz
+        (ts_us=>   5758316, event=>1, data=>    900500),  -- CLOCK freq=900500Hz
+        (ts_us=>   5768004, event=>1, data=>    895000),  -- CLOCK freq=895000Hz
+        (ts_us=>   5777807, event=>1, data=>    889500),  -- CLOCK freq=889500Hz
+        (ts_us=>   5787495, event=>1, data=>    884000),  -- CLOCK freq=884000Hz
+        (ts_us=>   5797184, event=>1, data=>    878500),  -- CLOCK freq=878500Hz
+        (ts_us=>   5806986, event=>1, data=>    873000),  -- CLOCK freq=873000Hz
+        (ts_us=>   5816674, event=>1, data=>    867500),  -- CLOCK freq=867500Hz
+        (ts_us=>   5826363, event=>1, data=>    862000),  -- CLOCK freq=862000Hz
+        (ts_us=>   5836165, event=>1, data=>    856500),  -- CLOCK freq=856500Hz
+        (ts_us=>   5845853, event=>1, data=>    851000),  -- CLOCK freq=851000Hz
+        (ts_us=>   5855542, event=>1, data=>    845500),  -- CLOCK freq=845500Hz
+        (ts_us=>   5865344, event=>1, data=>    840000),  -- CLOCK freq=840000Hz
+        (ts_us=>   5875033, event=>1, data=>    834500),  -- CLOCK freq=834500Hz
+        (ts_us=>   5884721, event=>1, data=>    829000),  -- CLOCK freq=829000Hz
+        (ts_us=>   5894523, event=>1, data=>    823500),  -- CLOCK freq=823500Hz
+        (ts_us=>   5897496, event=>2, data=>       255),  -- PHONE phone=0x3F inflection=3
+        (ts_us=>   5997496, event=>2, data=>       255)   -- PHONE phone=0x3F inflection=3
     );
 
 end package votrax_tb_vectors;

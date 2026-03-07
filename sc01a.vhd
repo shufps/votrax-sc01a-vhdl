@@ -13,7 +13,6 @@
 --   - All arithmetic in s(2.15) fixed-point (no floating point)
 --   - Filter coefficients pre-computed as static ROM tables
 --   - IIR filters implemented as sequential state machines
---   - FN filter DC stabilization via pole displacement
 --   - Clock rate derived from CLK_HZ generic (tested at 50 MHz)
 --   - Designed for FPGA synthesis (Quartus/Intel)
 --

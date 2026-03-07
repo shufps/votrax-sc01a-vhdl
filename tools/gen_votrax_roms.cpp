@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <cfloat>
 #include <initializer_list>
+#include <complex>
 #include <unistd.h>
 
 // sclock/cclock = (main/18)/(main/36) = 2 (fixed, clock-independent)
@@ -172,6 +173,77 @@ Coeffs build_injection(double c1b, double c2t, double c2b,
 }
 
 // ============================================================
+// Pole analysis (stability check)
+// ============================================================
+
+// Evaluate monic polynomial z^n + p[0]*z^{n-1} + ... + p[n-1] via Horner
+static std::complex<double> poly_eval(const double *p, int n, std::complex<double> z)
+{
+    std::complex<double> r(1.0, 0.0);
+    for (int i = 0; i < n; i++)
+        r = r * z + p[i];
+    return r;
+}
+
+// Durand-Kerner root finding for monic polynomial z^n + p[0]*z^{n-1} + ... + p[n-1]
+static void find_roots_dkr(const double *p, int n, std::complex<double> *roots)
+{
+    const std::complex<double> w(0.4, 0.9);
+    for (int i = 0; i < n; i++)
+        roots[i] = std::pow(w, i);
+
+    for (int iter = 0; iter < 500; iter++) {
+        double err = 0.0;
+        for (int i = 0; i < n; i++) {
+            std::complex<double> val = poly_eval(p, n, roots[i]);
+            std::complex<double> den(1.0, 0.0);
+            for (int j = 0; j < n; j++)
+                if (j != i) den *= (roots[i] - roots[j]);
+            std::complex<double> delta = val / den;
+            roots[i] -= delta;
+            err = std::max(err, std::abs(delta));
+        }
+        if (err < 1e-12) break;
+    }
+}
+
+// Compute poles (roots of denominator) for a Coeffs. Returns pole count.
+//
+// build_standard always embeds a guaranteed z=-1 pole/zero pair that cancels
+// in H(z). We detect this (b2 == b1+b3-1) and factor it out analytically so
+// the stability check only sees the 2 meaningful bandpass poles.
+static int get_poles(const Coeffs &c, std::complex<double> poles[3],
+                     bool *nyquist_factored = nullptr)
+{
+    if (nyquist_factored) *nyquist_factored = false;
+
+    int order;
+    double p[3];
+    if (std::fabs(c.b3) > 1e-9) {
+        p[0] = c.b1; p[1] = c.b2; p[2] = c.b3; order = 3;
+    } else if (std::fabs(c.b2) > 1e-9) {
+        p[0] = c.b1; p[1] = c.b2; order = 2;
+    } else {
+        order = 1;
+    }
+
+    if (order == 3 && std::fabs(c.b2 - (c.b1 + c.b3 - 1.0)) < 1e-6) {
+        // Factor out (z+1): z^3+b1*z^2+b2*z+b3 = (z+1)*(z^2+(b1-1)*z+b3)
+        double quad[2] = { c.b1 - 1.0, c.b3 };
+        find_roots_dkr(quad, 2, poles);
+        if (nyquist_factored) *nyquist_factored = true;
+        return 2;
+    }
+
+    if (order == 1) {
+        poles[0] = -c.b1;
+    } else {
+        find_roots_dkr(p, order, poles);
+    }
+    return order;
+}
+
+// ============================================================
 // Sanity check: all coefficients fit in s(2.15)?
 // ============================================================
 void sanity_check()
@@ -217,6 +289,94 @@ void sanity_check()
     fprintf(stderr, "Fits: %s\n\n",
             (gmin >= (double)FP_MIN/FP_SCALE && gmax <= (double)FP_MAX/FP_SCALE)
             ? "YES" : "NO - OVERFLOW!");
+}
+
+// ============================================================
+// Stability check: pole radii for all filter settings
+// ============================================================
+void stability_check()
+{
+    const double NEAR_LO = 0.99;  // warn if pole radius >= this (still stable)
+    const double NEAR_HI = 1.01;  // warn if pole radius <= this (barely unstable)
+
+    struct Stats {
+        const char *name;
+        double max_r = 0.0, min_r = 1e9;
+        int n_unstable = 0, n_near = 0;
+        char worst[64] = "";
+    };
+
+    auto process = [&](Stats &s, const Coeffs &c, const char *label = nullptr) {
+        std::complex<double> poles[3];
+        int n = get_poles(c, poles);
+        for (int i = 0; i < n; i++) {
+            double r = std::abs(poles[i]);
+            if (r > s.max_r) {
+                s.max_r = r;
+                if (label) snprintf(s.worst, sizeof(s.worst), "%s", label);
+            }
+            if (r < s.min_r) s.min_r = r;
+            if (r > 1.0 + 1e-6)                             s.n_unstable++;
+            else if (r >= NEAR_LO && r <= 1.0 + 1e-6)       s.n_near++;
+        }
+    };
+
+    Stats f1{"F1"}, f2v{"F2V"}, f3{"F3"}, f4{"F4"}, fx{"FX"}, fn{"FN"}, f2n{"F2N"};
+    char lbl[64];
+
+    // F1 (16 settings)
+    for (uint32_t b = 0; b < 16; b++) {
+        snprintf(lbl, sizeof(lbl), "b=%u", b);
+        process(f1, build_standard(11247, 11797, 949, 52067,
+                2280 + bits_to_caps(b, {2546, 4973, 9861, 19724}), 166272), lbl);
+    }
+
+    // F2V (16×32 settings)
+    for (uint32_t qb = 0; qb < 16; qb++) {
+        double c2t = 829 + bits_to_caps(qb, {1390, 2965, 5875, 11297});
+        for (uint32_t fb = 0; fb < 32; fb++) {
+            snprintf(lbl, sizeof(lbl), "q=%u,f=%u", qb, fb);
+            process(f2v, build_standard(24840, 29154, c2t, 38180,
+                    2352 + bits_to_caps(fb, {833, 1663, 3164, 6327, 12654}), 34270), lbl);
+        }
+    }
+
+    // F3 (16 settings)
+    for (uint32_t b = 0; b < 16; b++) {
+        snprintf(lbl, sizeof(lbl), "b=%u", b);
+        process(f3, build_standard(0, 17594, 868, 18828,
+                8480 + bits_to_caps(b, {2226, 4485, 9056, 18111}), 50019), lbl);
+    }
+
+    // F4, FX, FN (single settings)
+    process(f4,  build_standard(0, 28810, 1165, 21457, 8558, 7289),  "fixed");
+    process(fx,  build_lowpass(1122, 23131),                          "fixed");
+    process(fn,  build_noise_shaper(15500, 14854, 8450, 9523, 14083), "fixed");
+
+    // F2N (16×32 settings)
+    for (uint32_t qb = 0; qb < 16; qb++) {
+        double c2t = 829 + bits_to_caps(qb, {1390, 2965, 5875, 11297});
+        for (uint32_t fb = 0; fb < 32; fb++) {
+            double c3 = 2352 + bits_to_caps(fb, {833, 1663, 3164, 6327, 12654});
+            snprintf(lbl, sizeof(lbl), "q=%u,f=%u", qb, fb);
+            process(f2n, build_injection(29154, c2t, 38180, c3, 34270), lbl);
+        }
+    }
+
+    fprintf(stderr, "=== Stability check (|z| of poles) ===\n");
+    fprintf(stderr, "  Note: |z| < 1 = stable; |z| >= 0.99 = near unit circle; |z| >= 1 = UNSTABLE\n\n");
+
+    auto report = [&](const Stats &s) {
+        fprintf(stderr, "  %-6s: |z| in [%.6f, %.6f]  worst=%s",
+                s.name, s.min_r, s.max_r, s.worst[0] ? s.worst : "?");
+        if (s.n_unstable) fprintf(stderr, "  *** UNSTABLE: %d poles ***", s.n_unstable);
+        if (s.n_near)     fprintf(stderr, "  [%d pole(s) near unit circle (>=%.2f)]", s.n_near, NEAR_LO);
+        fprintf(stderr, "\n");
+    };
+
+    report(f1); report(f2v); report(f3); report(f4);
+    report(fx);  report(fn);  report(f2n);
+    fprintf(stderr, "\n");
 }
 
 // ============================================================
@@ -543,6 +703,7 @@ void gen_vhdl_rom_entities(const char *outdir)
 int main()
 {
     sanity_check();
+    stability_check();
 
     FILE *f = fopen("/tmp/votrax_rom_tables.h", "w");
     gen_c_header(f);

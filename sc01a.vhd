@@ -28,7 +28,8 @@ entity sc01a is
     generic (
         CLK_HZ           : integer := 50_000_000; -- system clock frequency
         ENABLE_RESAMPLER : integer := 1;
-        ENABLE_F2N       : boolean := false        -- F2N injection filter
+        ENABLE_F2N       : boolean := false;        -- F2N injection filter
+        IS_SC01A         : integer := 1
     );
     port (
         -- System
@@ -167,8 +168,15 @@ begin
     -- ================================================================
     -- Phoneme ROM
     -- ================================================================
+SC01A_ROM: if IS_SC01A = 1 generate
     u_rom : entity work.sc01a_rom
         port map(phoneme => phoneme_reg, data => sc01a_rom_data);
+end generate SC01A_ROM;
+
+SC01_ROM: if IS_SC01A = 0 generate
+    u_rom : entity work.sc01_rom
+        port map(phoneme => phoneme_reg, data => sc01a_rom_data);
+end generate SC01_ROM;
 
     -- ================================================================
     -- Coefficient ROMs

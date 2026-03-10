@@ -199,7 +199,7 @@ end generate SC01_ROM;
     -- ================================================================
     -- Filter pipeline
     -- ================================================================
-    u_filter : entity work.sc01a_filter_pipe
+    u_filter : entity work.sc01a_filter
         generic map(ENABLE_F2N => ENABLE_F2N)
         port map(
             clk => clk,

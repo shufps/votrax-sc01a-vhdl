@@ -40,7 +40,7 @@ entity iir_filter_slow is
         rom_data : in signed(17 downto 0); -- valid after ROM_LATENCY cycles
 
         y_out : out signed(17 downto 0);
-        done : out std_logic -- sticky high until next start
+        done : out std_logic -- 1-cycle pulse when result is ready
     );
 end entity;
 
@@ -71,6 +71,7 @@ architecture rtl of iir_filter_slow is
     -- Wait counters
     signal rom_wait : integer range 0 to 31 := 0;
     signal mul_wait : integer range 0 to 31 := 0;
+
 
     -- FSM
     type state_t is (
@@ -154,7 +155,7 @@ begin
         if rising_edge(clk) then
             if reset_n = '0' then
                 state <= S_IDLE;
-                done <= '0';
+                done  <= '0';
                 y_out <= (others => '0');
                 rom_addr_r <= (others => '0');
                 acc <= (others => '0');
@@ -174,9 +175,9 @@ begin
                     when S_IDLE =>
                         -- park ROM addr for clean waves
                         rom_addr_r <= (others => '0');
+                        done <= '0';
 
                         if start = '1' then
-                            done <= '0'; -- clear sticky done on new run
 
                             -- shift x history and insert new sample
                             for i in N_X - 1 downto 1 loop
@@ -250,8 +251,14 @@ begin
                         -- acc >> FP_FRAC
                         shifted := shift_right(acc, FP_FRAC);
                         if shifted > to_signed(131071, 64) then
+                            report "IIR CLIP HIGH: shifted=" & integer'image(to_integer(shifted)) &
+                                   " clipped to 131071, diff=" & integer'image(to_integer(shifted) - 131071)
+                                severity warning;
                             result := to_signed(131071, 18);
                         elsif shifted < to_signed(-131072, 64) then
+                            report "IIR CLIP LOW: shifted=" & integer'image(to_integer(shifted)) &
+                                   " clipped to -131072, diff=" & integer'image(to_integer(shifted) - (-131072))
+                                severity warning;
                             result := to_signed(-131072, 18);
                         else
                             result := shifted(17 downto 0);
@@ -264,7 +271,7 @@ begin
 
                         y_hist(0) <= result;
                         y_out <= result;
-                        done <= '1'; -- sticky until next start
+                        done  <= '1';
                         state <= S_IDLE;
 
                     when others =>
@@ -274,5 +281,4 @@ begin
             end if;
         end if;
     end process;
-
 end architecture;

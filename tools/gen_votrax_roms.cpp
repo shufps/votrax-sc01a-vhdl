@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <cfloat>
+#include <functional>
 #include <initializer_list>
 #include <complex>
 #include <unistd.h>
@@ -9,21 +10,21 @@
 // sclock/cclock = (main/18)/(main/36) = 2 (fixed, clock-independent)
 static constexpr double SCLOCK_NORM = 2.0;
 
-// Prewarped bilinear transform warp factor.
-// fpeak_norm is the filter peak frequency in units of cclock (dimensionless).
-// Returns zc_norm = zc/cclock, which replaces T=4 in the standard transform.
-// At very low frequencies: zc_norm → 2*SCLOCK_NORM = T=4 (standard bilinear).
-static double prewarp_zc(double fpeak_norm) {
-    if (fpeak_norm < 1e-9) return 2.0 * SCLOCK_NORM; // fallback: standard bilinear
-    double arg = M_PI * fpeak_norm / SCLOCK_NORM;
-    if (arg >= M_PI / 2.0) return 2.0 * SCLOCK_NORM; // above Nyquist: fallback
-    return 2.0 * M_PI * fpeak_norm / tan(arg);
+double m_sclock = 0.0;
+double m_cclock = 0.0;
+
+static void set_clocks_from_dac(int dac_i) {
+  if (dac_i < 0x40)
+    dac_i = 0x40;
+  double sc_hz = 950000.0 + (dac_i - 0xA0) * 5500.0;
+  m_sclock = sc_hz / 18.0;
+  m_cclock = sc_hz / 36.0;
 }
 
 // ============================================================
 // Fixed-point format: s(2.15) = 18-bit signed
-// range: -2.0 ... +1.99997
-// scale factor: 2^15 = 32768
+// range: -4.0 ... +3.99997
+// default scale factor: 2^15 = 32768
 // ============================================================
 static constexpr int    FP_BITS  = 18;
 static constexpr int    FP_FRAC  = 15;
@@ -39,22 +40,17 @@ int to_fixed(double v)
     return r;
 }
 
-double bits_to_caps(uint32_t value, std::initializer_list<double> caps)
+int to_fixed_s(double v, double scale)
 {
-    double total = 0.0;
-    for (double c : caps) {
-        if (value & 1) total += c;
-        value >>= 1;
-    }
-    return total;
+    int r = (int)round(v * scale);
+    if (r > FP_MAX) { fprintf(stderr, "OVERFLOW: %f -> %d\n", v, r); r = FP_MAX; }
+    if (r < FP_MIN) { fprintf(stderr, "UNDERFLOW: %f -> %d\n", v, r); r = FP_MIN; }
+    return r;
 }
 
 // ============================================================
-// Filter builders (clock-free, normalized by b0)
-// ============================================================
-
 // ROM layout per filter setting (8 slots, coeff_idx = lower 3 bits of addr):
-//   idx 0 → b0 = 1.0 always (stored anyway for uniformity)
+//   idx 0 → b0 = 1.0 always (stored anyway for uniformity, never read)
 //   idx 1 → a0
 //   idx 2 → a1
 //   idx 3 → a2
@@ -71,23 +67,65 @@ struct Coeffs {
     }
 };
 
+// ============================================================
+// Per-filter optimal scale computation
+//
+// ROM layout (addr_for_tap in iir_filter_slow):
+//   A group: ROM idx 1..N_X       (feedforward: a0..a(N_X-1))
+//   B group: ROM idx 5..4+N_Y-1   (feedback:    b1..b(N_Y-1))
+//   ROM idx 0 = b0 = 1.0, never read by iir_filter_slow
+//
+// Scale = largest power of 2 such that max_abs * scale <= FP_MAX
+// ============================================================
+struct FilterScales {
+    int frac_a = FP_FRAC;
+    int frac_b = FP_FRAC;
+    double scale_a() const { return std::ldexp(1.0, frac_a); }
+    double scale_b() const { return std::ldexp(1.0, frac_b); }
+};
+
+FilterScales compute_scales(int n_settings, int N_X, int N_Y,
+                             std::function<Coeffs(int)> get_coeffs);
+
+// Fill 8 ROM slots using per-group scales.
+// Split point: idx < 5 → A scale, idx >= 5 → B scale.
+// (b0 at idx 0 is stored with A scale but never used in computation.)
+void fill_scaled(int32_t *dst, const Coeffs &c, const FilterScales &sc)
+{
+    dst[0] = 0;  // b0=1.0 at idx 0 is never read by iir_filter_slow (addr_for_tap skips it)
+    for (int i = 1; i < 8; i++) {
+        double scale = (i >= 5) ? sc.scale_b() : sc.scale_a();
+        dst[i] = to_fixed_s(c[i], scale);
+    }
+}
+
+double bits_to_caps(uint32_t value, std::initializer_list<double> caps)
+{
+    double total = 0.0;
+    for (double c : caps) {
+        if (value & 1) total += c;
+        value >>= 1;
+    }
+    return total;
+}
+
+// ============================================================
+// Filter builders (clock-free, normalized by b0)
+// ============================================================
+
 Coeffs build_standard(double c1t, double c1b, double c2t, double c2b,
                        double c3, double c4)
 {
-    double k0 = c1t / c1b;
-    double k1 = c4 * c2t / (c1b * c3);
-    double k2 = c4 * c2b / (c1b * c3);
+	double k0 = c1t / (m_cclock * c1b);
+	double k1 = c4 * c2t / (m_cclock * c1b * c3);
+	double k2 = c4 * c2b / (m_cclock * m_cclock * c1b * c3);
 
-    // Prewarped bilinear: fpeak_norm = peak frequency in units of cclock.
-    // Formula derived from MAME build_standard_filter() (Galibert), adapted to
-    // dimensionless cap ratios (cclock cancels out in the ratio).
-    double fpeak_norm = (k2 > 1e-30) ? sqrt(fabs(k0*k1 - k2)) / (2*M_PI*k2) : 0.0;
-    double zn  = prewarp_zc(fpeak_norm);
-    double zn2 = zn * zn;
+	double fpeak = sqrt(fabs(k0*k1 - k2))/(2*M_PI*k2);
+	double zc = 2*M_PI*fpeak/tan(M_PI*fpeak / m_sclock);
 
-    double m0 = zn  * k0;
-    double m1 = zn  * k1;
-    double m2 = zn2 * k2;
+	double m0 = zc*k0;
+	double m1 = zc*k1;
+	double m2 = zc*zc*k2;
 
     double b0 = 1+m1+m2;
     return {
@@ -97,70 +135,43 @@ Coeffs build_standard(double c1t, double c1b, double c2t, double c2b,
     };
 }
 
-// Lowpass: a1=a2=a3=0, b2=b3=0 → pad with 0 for uniform ROM
 Coeffs build_lowpass(double c1t, double c1b)
 {
-    double k  = (c1b / c1t) * (150.0/4000.0);
-    // fpeak_norm = cutoff frequency in units of cclock (cclock cancels)
-    double fpeak_norm = (k > 1e-30) ? 1.0 / (2*M_PI*k) : 0.0;
-    double zn = prewarp_zc(fpeak_norm);
-    double m  = zn * k;
+	double k = c1b / (m_cclock * c1t) * (150.0/4000.0);
+	double fpeak = 1/(2*M_PI*k);
+	double zc = 2*M_PI*fpeak/tan(M_PI*fpeak / m_sclock);
+	double m = zc*k;
     double b0 = 1.0 + m;
     return { 1.0, 1.0/b0, 0, 0, 0, (1.0-m)/b0, 0, 0 };
 }
 
-// Noise shaper: a1=0, a2=-a0, b3=0 -> pad with 0 for uniform ROM
-// H(s) = k0*s / (1 + k1*s + k2*s^2), normalized (cclock=1):
-//   k0 = c2t*c3*c2b/c4    (dimensionless)
-//   k1 = c2t*c2b          (cclock cancels from MAME's k1=c2t*(cclock*c2b) after normalization)
-//   k2 = c1*c2t*c3/c4     (cclock cancels from MAME's k2=c1*c2t*c3/(cclock*c4))
-// fpeak_norm = sqrt(1/k2_norm)/(2*pi) is clock-independent -> prewarping works correctly.
 Coeffs build_noise_shaper(double c1, double c2t, double c2b,
                            double c3, double c4)
 {
-    double k0 = c2t * c3 * c2b / c4;
-    double k1 = c2t * c2b;
-    double k2 = c1  * c2t * c3 / c4;
+	double k0 = c2t*c3*c2b/c4;
+	double k1 = c2t*(m_cclock * c2b);
+	double k2 = c1*c2t*c3/(m_cclock * c4);
 
-    double fpeak_norm = sqrt(1.0 / k2) / (2*M_PI);
-    double zn  = prewarp_zc(fpeak_norm);
-    double zn2 = zn * zn;
+	double fpeak = sqrt(1/k2)/(2*M_PI);
+	double zc = 2*M_PI*fpeak/tan(M_PI*fpeak / m_sclock);
 
-    double m0 = zn  * k0;
-    double m1 = zn  * k1;
-    double m2 = zn2 * k2;
+	double m0 = zc*k0;
+	double m1 = zc*k1;
+	double m2 = zc*zc*k2;
 
     double b0 = 1+m1+m2;
     return { 1.0, m0/b0, 0, -m0/b0, 0, (2-2*m2)/b0, (1-m1+m2)/b0, 0 };
 }
 
-// Injection filter (F2N): noise injection at F2 output (mixed before F3).
-//
-// MAME uses: build_injection_filter(c1b=29154, c2t=829+Q, c2b=38180, c3=2352+F, c4=34270)
-// Same Q/F sweep as F2V → same 512-entry address space (12-bit addr, 4096 ROM entries).
-//
-// MAME's H(s) = (k0 + k2*s) / (k1 - k2*s) is neutralized because the sign of k1
-// varies across the Q/F range, making the denominator sometimes zero or giving a
-// right-half-plane pole.
-//
-// Universal stable formula: choose denominator sign based on k1 sign:
-//   k1 >= 0: use (k1 + m) as b0  →  pole = -(k1-m)/(k1+m), |pole| < 1 ✓
-//   k1 <  0: use (k1 - m) as b0  →  pole = -(k1+m)/(k1-m), |pole| < 1 ✓
-// Proof: |b1/b0| = |(k1∓m)/(k1±m)| < 1 whenever k1*m don't change sign — holds by
-// construction since both cases have |b0| = |k1|+m > |b1| = ||k1|-m|.
-//
-// c4 is present in the call but unused in the filter equations (Galibert's derivation).
 Coeffs build_injection(double c1b, double c2t, double c2b,
                         double c3, double /* c4 */)
 {
-    static constexpr double T = 2.0 * SCLOCK_NORM; // = 4.0
+    static constexpr double T = 2.0 * SCLOCK_NORM;
 
-    // Normalized (cclock=1) k values from MAME derivation
     double k0_n = c2t;
     double k1_n = c1b * c3 / c2t - c2t;
     double m_n  = T * c2b;
 
-    // Stable denominator: pick sign so that b0 yields |pole| < 1 always
     double b0_raw = (k1_n >= 0.0) ? (k1_n + m_n) : (k1_n - m_n);
     double b1_raw = (k1_n >= 0.0) ? (k1_n - m_n) : (k1_n + m_n);
     double a_pos  = k0_n + m_n;
@@ -172,15 +183,85 @@ Coeffs build_injection(double c1b, double c2t, double c2b,
         return { 1.0, 1.0, 0, 0, 0, 0, 0, 0 };
     }
 
-    // ROM layout: N_X=2, N_Y=2 → iir_filter_slow reads a0 (idx1), a1 (idx2), b1 (idx5)
     return { 1.0, a_pos/b0_raw, a_neg/b0_raw, 0, 0, b1_raw/b0_raw, 0, 0 };
+}
+
+// ============================================================
+// compute_scales implementation (after Coeffs is defined)
+// ============================================================
+FilterScales compute_scales(int n_settings, int N_X, int N_Y,
+                             std::function<Coeffs(int)> get_coeffs)
+{
+    double max_a = 0.0, max_b = 0.0;
+    int N_B = N_Y - 1;
+    for (int s = 0; s < n_settings; s++) {
+        Coeffs c = get_coeffs(s);
+        // A group: ROM idx 1..N_X  (a0..a(N_X-1))
+        for (int i = 1; i <= N_X; i++)
+            max_a = std::max(max_a, std::fabs(c[i]));
+        // B group: ROM idx 5..4+N_B  (b1..b(N_Y-1))
+        for (int i = 5; i < 5 + N_B; i++)
+            max_b = std::max(max_b, std::fabs(c[i]));
+    }
+    int fa = (max_a > 0.0) ? (int)std::floor(std::log2((double)FP_MAX / max_a)) : FP_FRAC;
+    int fb = (max_b > 0.0) ? (int)std::floor(std::log2((double)FP_MAX / max_b)) : FP_FRAC;
+    return {fa, fb};
+}
+
+// ============================================================
+// Compute scales for all filters at once
+// ============================================================
+struct AllFilterScales {
+    FilterScales f1, f2v, f3, f4, fx, fn, f2n;
+};
+
+AllFilterScales compute_all_scales()
+{
+    AllFilterScales s;
+
+    s.f1 = compute_scales(16, 4, 4, [](int b) {
+        return build_standard(11247, 11797, 949, 52067,
+               2280 + bits_to_caps(b, {2546, 4973, 9861, 19724}), 166272);
+    });
+
+    s.f2v = compute_scales(512, 4, 4, [](int idx) {
+        int qb = idx / 32, fb = idx % 32;
+        double c2t = 829 + bits_to_caps(qb, {1390, 2965, 5875, 11297});
+        double c3  = 2352 + bits_to_caps(fb, {833, 1663, 3164, 6327, 12654});
+        return build_standard(24840, 29154, c2t, 38180, c3, 34270);
+    });
+
+    s.f3 = compute_scales(16, 4, 4, [](int b) {
+        return build_standard(0, 17594, 868, 18828,
+               8480 + bits_to_caps(b, {2226, 4485, 9056, 18111}), 50019);
+    });
+
+    s.f4 = compute_scales(1, 4, 4, [](int) {
+        return build_standard(0, 28810, 1165, 21457, 8558, 7289);
+    });
+
+    s.fx = compute_scales(1, 2, 2, [](int) {
+        return build_lowpass(1122, 23131);
+    });
+
+    s.fn = compute_scales(1, 4, 4, [](int) {
+        return build_noise_shaper(15500, 14854, 8450, 9523, 14083);
+    });
+
+    s.f2n = compute_scales(512, 2, 2, [](int idx) {
+        int qb = idx / 32, fb = idx % 32;
+        double c2t = 829 + bits_to_caps(qb, {1390, 2965, 5875, 11297});
+        double c3  = 2352 + bits_to_caps(fb, {833, 1663, 3164, 6327, 12654});
+        return build_injection(29154, c2t, 38180, c3, 34270);
+    });
+
+    return s;
 }
 
 // ============================================================
 // Pole analysis (stability check)
 // ============================================================
 
-// Evaluate monic polynomial z^n + p[0]*z^{n-1} + ... + p[n-1] via Horner
 static std::complex<double> poly_eval(const double *p, int n, std::complex<double> z)
 {
     std::complex<double> r(1.0, 0.0);
@@ -189,7 +270,6 @@ static std::complex<double> poly_eval(const double *p, int n, std::complex<doubl
     return r;
 }
 
-// Durand-Kerner root finding for monic polynomial z^n + p[0]*z^{n-1} + ... + p[n-1]
 static void find_roots_dkr(const double *p, int n, std::complex<double> *roots)
 {
     const std::complex<double> w(0.4, 0.9);
@@ -211,11 +291,6 @@ static void find_roots_dkr(const double *p, int n, std::complex<double> *roots)
     }
 }
 
-// Compute poles (roots of denominator) for a Coeffs. Returns pole count.
-//
-// build_standard always embeds a guaranteed z=-1 pole/zero pair that cancels
-// in H(z). We detect this (b2 == b1+b3-1) and factor it out analytically so
-// the stability check only sees the 2 meaningful bandpass poles.
 static int get_poles(const Coeffs &c, std::complex<double> poles[3],
                      bool *nyquist_factored = nullptr)
 {
@@ -232,7 +307,6 @@ static int get_poles(const Coeffs &c, std::complex<double> poles[3],
     }
 
     if (order == 3 && std::fabs(c.b2 - (c.b1 + c.b3 - 1.0)) < 1e-6) {
-        // Factor out (z+1): z^3+b1*z^2+b2*z+b3 = (z+1)*(z^2+(b1-1)*z+b3)
         double quad[2] = { c.b1 - 1.0, c.b3 };
         find_roots_dkr(quad, 2, poles);
         if (nyquist_factored) *nyquist_factored = true;
@@ -300,8 +374,8 @@ void sanity_check()
 // ============================================================
 void stability_check()
 {
-    const double NEAR_LO = 0.99;  // warn if pole radius >= this (still stable)
-    const double NEAR_HI = 1.01;  // warn if pole radius <= this (barely unstable)
+    const double NEAR_LO = 0.99;
+    const double NEAR_HI = 1.01;
 
     struct Stats {
         const char *name;
@@ -328,14 +402,12 @@ void stability_check()
     Stats f1{"F1"}, f2v{"F2V"}, f3{"F3"}, f4{"F4"}, fx{"FX"}, fn{"FN"}, f2n{"F2N"};
     char lbl[64];
 
-    // F1 (16 settings)
     for (uint32_t b = 0; b < 16; b++) {
         snprintf(lbl, sizeof(lbl), "b=%u", b);
         process(f1, build_standard(11247, 11797, 949, 52067,
                 2280 + bits_to_caps(b, {2546, 4973, 9861, 19724}), 166272), lbl);
     }
 
-    // F2V (16×32 settings)
     for (uint32_t qb = 0; qb < 16; qb++) {
         double c2t = 829 + bits_to_caps(qb, {1390, 2965, 5875, 11297});
         for (uint32_t fb = 0; fb < 32; fb++) {
@@ -345,19 +417,16 @@ void stability_check()
         }
     }
 
-    // F3 (16 settings)
     for (uint32_t b = 0; b < 16; b++) {
         snprintf(lbl, sizeof(lbl), "b=%u", b);
         process(f3, build_standard(0, 17594, 868, 18828,
                 8480 + bits_to_caps(b, {2226, 4485, 9056, 18111}), 50019), lbl);
     }
 
-    // F4, FX, FN (single settings)
     process(f4,  build_standard(0, 28810, 1165, 21457, 8558, 7289),  "fixed");
     process(fx,  build_lowpass(1122, 23131),                          "fixed");
     process(fn,  build_noise_shaper(15500, 14854, 8450, 9523, 14083), "fixed");
 
-    // F2N (16×32 settings)
     for (uint32_t qb = 0; qb < 16; qb++) {
         double c2t = 829 + bits_to_caps(qb, {1390, 2965, 5875, 11297});
         for (uint32_t fb = 0; fb < 32; fb++) {
@@ -384,44 +453,37 @@ void stability_check()
 }
 
 // ============================================================
-// VHDL output helpers
-// ============================================================
-
-static const char *COEFF_NAMES[8] = {"b0","a0","a1","a2","a3","b1","b2","b3"};
-
-void print_vhdl_entry(const Coeffs &c, const char *comment, bool last_entry)
-{
-    printf("    -- %s\n", comment);
-    for (int i = 0; i < 8; i++) {
-        int v = to_fixed(c[i]);
-        printf("    \"");
-        for (int b = FP_BITS-1; b >= 0; b--)
-            printf("%d", (v >> b) & 1);
-        bool last_word = (i == 7) && last_entry;
-        printf("\"%s  -- [%d] %s = %+.6f\n",
-               last_word ? " " : ",", i, COEFF_NAMES[i], c[i]);
-    }
-    if (!last_entry) printf("\n");
-}
-
-// ============================================================
 // C header output (for MAME fixed-point test)
 // ============================================================
-void gen_c_header(FILE *f)
+void gen_c_header(FILE *f, const AllFilterScales &scales)
 {
     fprintf(f, "// Auto-generated by gen_votrax_roms.cpp\n");
-    fprintf(f, "// SC01A filter coefficient ROMs, s(2.15) fixed-point\n");
-    fprintf(f, "// scale = 2^15 = 32768\n");
+    fprintf(f, "// SC01A filter coefficient ROMs\n");
+    fprintf(f, "// Per-filter optimal fixed-point scaling (power of 2)\n");
     fprintf(f, "//\n");
-    fprintf(f, "// addr = (filter_param << 3) | coeff_idx\n");
-    fprintf(f, "// coeff_idx: 0=b0(=32768) 1=a0 2=a1 3=a2 4=a3 5=b1 6=b2 7=b3\n");
+    fprintf(f, "// A coefficients: ROM idx 1..N_X  (feedforward)\n");
+    fprintf(f, "// B coefficients: ROM idx 5..7    (feedback)\n");
+    fprintf(f, "// ROM idx 0 = b0 = 1.0 (stored but never read)\n");
     fprintf(f, "\n");
     fprintf(f, "#pragma once\n");
     fprintf(f, "#include <cstdint>\n\n");
-    static constexpr int VOTRAX_FP_FRAC  = 15;
-    fprintf(f, "static constexpr int VOTRAX_FP_FRAC = %d;\n", FP_FRAC);
-    fprintf(f, "static constexpr int VOTRAX_FP_SCALE = %d; // 2^%d\n\n",
-            (int)FP_SCALE, FP_FRAC);
+
+    // Emit per-filter scale constants
+    fprintf(f, "// Per-filter scale factors (scale = 2^FP_FRAC_x)\n");
+    auto emit_scales = [&](const char *name, const FilterScales &s) {
+        fprintf(f, "static constexpr int %s_FP_FRAC_A = %d;  // scale = %.0f\n",
+                name, s.frac_a, s.scale_a());
+        fprintf(f, "static constexpr int %s_FP_FRAC_B = %d;  // scale = %.0f\n",
+                name, s.frac_b, s.scale_b());
+    };
+    emit_scales("F1",  scales.f1);
+    emit_scales("F2V", scales.f2v);
+    emit_scales("F3",  scales.f3);
+    emit_scales("F4",  scales.f4);
+    emit_scales("FX",  scales.fx);
+    emit_scales("FN",  scales.fn);
+    emit_scales("F2N", scales.f2n);
+    fprintf(f, "\n");
 
     auto write_rom = [&](const char *name, const char *comment,
                          int entries, int32_t *data) {
@@ -438,32 +500,29 @@ void gen_c_header(FILE *f)
         fprintf(f, "};\n\n");
     };
 
-    // Helper to fill array from Coeffs
-    auto fill = [](int32_t *dst, const Coeffs &c) {
-        for (int i = 0; i < 8; i++) dst[i] = to_fixed(c[i]);
-    };
-
     // F1
     {
         int32_t data[16*8];
         for (uint32_t b = 0; b < 16; b++) {
             double c3 = 2280 + bits_to_caps(b, {2546, 4973, 9861, 19724});
-            fill(&data[b*8], build_standard(11247, 11797, 949, 52067, c3, 166272));
+            fill_scaled(&data[b*8],
+                        build_standard(11247, 11797, 949, 52067, c3, 166272),
+                        scales.f1);
         }
-        fprintf(f, "// F1: 16 settings × 8 coeffs\n");
+        fprintf(f, "// F1: 16 settings x 8 coeffs, FP_FRAC_A=%d FP_FRAC_B=%d\n",
+                scales.f1.frac_a, scales.f1.frac_b);
         fprintf(f, "// addr = (filt_f1 << 3) | coeff_idx\n");
         fprintf(f, "static const int32_t f1_rom[128] = {\n");
-        for (int i = 0; i < 128; i++) {
-            fprintf(f, "    %7d%s  // [%d] %s\n",
-                    data[i], i<127?",":"",
-                    i/8*8, COEFF_NAMES[i%8]);
-        }
+        for (int i = 0; i < 128; i++)
+            fprintf(f, "    %7d%s  // [%d] idx%d\n",
+                    data[i], i<127?",":"", i/8, i%8);
         fprintf(f, "};\n\n");
     }
 
     // F2V
     {
-        fprintf(f, "// F2V: 512 settings × 8 coeffs = 4096 entries\n");
+        fprintf(f, "// F2V: 512 settings x 8 coeffs = 4096 entries, FP_FRAC_A=%d FP_FRAC_B=%d\n",
+                scales.f2v.frac_a, scales.f2v.frac_b);
         fprintf(f, "// addr = (filt_f2q << 8) | (filt_f2 << 3) | coeff_idx\n");
         fprintf(f, "static const int32_t f2v_rom[4096] = {\n");
         for (uint32_t qb = 0; qb < 16; qb++) {
@@ -471,7 +530,9 @@ void gen_c_header(FILE *f)
             for (uint32_t fb = 0; fb < 32; fb++) {
                 double c3 = 2352 + bits_to_caps(fb, {833, 1663, 3164, 6327, 12654});
                 int32_t entry[8];
-                fill(entry, build_standard(24840, 29154, c2t, 38180, c3, 34270));
+                fill_scaled(entry,
+                            build_standard(24840, 29154, c2t, 38180, c3, 34270),
+                            scales.f2v);
                 int base = (qb*32+fb)*8;
                 fprintf(f, "    ");
                 for (int i = 0; i < 8; i++)
@@ -484,13 +545,16 @@ void gen_c_header(FILE *f)
 
     // F3
     {
-        fprintf(f, "// F3: 16 settings × 8 coeffs\n");
+        fprintf(f, "// F3: 16 settings x 8 coeffs, FP_FRAC_A=%d FP_FRAC_B=%d\n",
+                scales.f3.frac_a, scales.f3.frac_b);
         fprintf(f, "// addr = (filt_f3 << 3) | coeff_idx\n");
         fprintf(f, "static const int32_t f3_rom[128] = {\n");
         for (uint32_t b = 0; b < 16; b++) {
             double c3 = 8480 + bits_to_caps(b, {2226, 4485, 9056, 18111});
             int32_t entry[8];
-            fill(entry, build_standard(0, 17594, 868, 18828, c3, 50019));
+            fill_scaled(entry,
+                        build_standard(0, 17594, 868, 18828, c3, 50019),
+                        scales.f3);
             fprintf(f, "    ");
             for (int i = 0; i < 8; i++)
                 fprintf(f, "%7d%s", entry[i], (b*8+i < 127) ? "," : " ");
@@ -500,10 +564,11 @@ void gen_c_header(FILE *f)
     }
 
     // F4, FX, FN
-    auto write_const = [&](const char *name, const char *comment, const Coeffs &c) {
+    auto write_const = [&](const char *name, const char *comment,
+                           const Coeffs &c, const FilterScales &sc) {
         int32_t entry[8];
-        fill(entry, c);
-        fprintf(f, "// %s\n", comment);
+        fill_scaled(entry, c, sc);
+        fprintf(f, "// %s  FP_FRAC_A=%d FP_FRAC_B=%d\n", comment, sc.frac_a, sc.frac_b);
         fprintf(f, "static const int32_t %s[8] = {", name);
         for (int i = 0; i < 8; i++)
             fprintf(f, " %7d%s", entry[i], i<7?",":"");
@@ -511,24 +576,26 @@ void gen_c_header(FILE *f)
     };
 
     write_const("f4_rom", "F4: constant",
-                build_standard(0, 28810, 1165, 21457, 8558, 7289));
+                build_standard(0, 28810, 1165, 21457, 8558, 7289), scales.f4);
     write_const("fx_rom", "FX lowpass: constant",
-                build_lowpass(1122, 23131));
+                build_lowpass(1122, 23131), scales.fx);
     write_const("fn_rom", "FN noise shaper: constant",
-                build_noise_shaper(15500, 14854, 8450, 9523, 14083));
+                build_noise_shaper(15500, 14854, 8450, 9523, 14083), scales.fn);
 
-    // F2N injection: 512 settings × 8 coeffs = 4096 entries (same addr as f2v_rom)
+    // F2N
     {
-        fprintf(f, "// F2N: 512 settings × 8 coeffs = 4096 entries\n");
+        fprintf(f, "// F2N: 512 settings x 8 coeffs = 4096 entries, FP_FRAC_A=%d FP_FRAC_B=%d\n",
+                scales.f2n.frac_a, scales.f2n.frac_b);
         fprintf(f, "// addr = (filt_f2q << 8) | (filt_f2 << 3) | coeff_idx\n");
-        fprintf(f, "// Only a0 (idx1), a1 (idx2), b1 (idx5) are non-zero (1st-order filter)\n");
         fprintf(f, "static const int32_t f2n_rom[4096] = {\n");
         for (uint32_t qb = 0; qb < 16; qb++) {
             double c2t = 829 + bits_to_caps(qb, {1390, 2965, 5875, 11297});
             for (uint32_t fb = 0; fb < 32; fb++) {
                 double c3 = 2352 + bits_to_caps(fb, {833, 1663, 3164, 6327, 12654});
                 int32_t entry[8];
-                fill(entry, build_injection(29154, c2t, 38180, c3, 34270));
+                fill_scaled(entry,
+                            build_injection(29154, c2t, 38180, c3, 34270),
+                            scales.f2n);
                 int base = (qb*32+fb)*8;
                 fprintf(f, "    ");
                 for (int i = 0; i < 8; i++)
@@ -542,20 +609,18 @@ void gen_c_header(FILE *f)
 
 // ============================================================
 // VHDL ROM entity generator
-// One entity per ROM, synchronous read for BRAM inference
 // ============================================================
-
-// Write one VHDL ROM entity to a file
-// name:       entity name, e.g. "f1_rom"
-// addr_bits:  address width (7 for 128 entries, 12 for 4096)
-// depth:      number of entries
-// data:       flat array of int32_t values (depth entries)
 void gen_vhdl_rom_entity(FILE *f, const char *name, int addr_bits,
-                          int depth, const int32_t *data)
+                          int depth, const int32_t *data,
+                          const FilterScales &scales)
 {
     fprintf(f, "-- Auto-generated by gen_votrax_roms.cpp\n");
-    fprintf(f, "-- %s: %d entries x 18-bit s(2.15)\n", name, depth);
-    fprintf(f, "-- addr(2:0) = coeff_idx: 0=b0 1=a0 2=a1 3=a2 4=a3 5=b1 6=b2 7=b3\n");
+    fprintf(f, "-- %s: %d entries x 18-bit\n", name, depth);
+    fprintf(f, "-- A coefficients (idx 1..N_X, feedforward): scale = 2^%d = %.0f\n",
+            scales.frac_a, scales.scale_a());
+    fprintf(f, "-- B coefficients (idx 5..7,  feedback):     scale = 2^%d = %.0f\n",
+            scales.frac_b, scales.scale_b());
+    fprintf(f, "-- addr(2:0) = coeff_idx: 0=b0(unused) 1=a0 2=a1 3=a2 4=a3 5=b1 6=b2 7=b3\n");
     fprintf(f, "-- Synchronous read: 1-cycle latency, infers as BRAM\n");
     fprintf(f, "\n");
     fprintf(f, "library ieee;\n");
@@ -572,18 +637,24 @@ void gen_vhdl_rom_entity(FILE *f, const char *name, int addr_bits,
     fprintf(f, "\n");
     fprintf(f, "architecture rtl of %s is\n", name);
     fprintf(f, "\n");
+    fprintf(f, "    -- Scaling constants (for iir_filter_slow generics FP_FRAC_A / FP_FRAC_B)\n");
+    fprintf(f, "    constant FP_FRAC_A : integer := %d;  -- A coefficients: scale = 2^%d\n",
+            scales.frac_a, scales.frac_a);
+    fprintf(f, "    constant FP_FRAC_B : integer := %d;  -- B coefficients: scale = 2^%d\n",
+            scales.frac_b, scales.frac_b);
+    fprintf(f, "\n");
     fprintf(f, "    type rom_t is array(0 to %d) of signed(17 downto 0);\n", depth - 1);
     fprintf(f, "    constant ROM : rom_t := (\n");
 
     for (int i = 0; i < depth; i++) {
         int v = data[i];
-        // print as 18-bit signed integer for VHDL to_signed()
         bool last = (i == depth - 1);
-        // also print which coeff_idx this is
+        int idx = i % 8;
+        double scale = (idx >= 5) ? scales.scale_b() : scales.scale_a();
         const char *coeff_names[8] = {"b0","a0","a1","a2","a3","b1","b2","b3"};
         fprintf(f, "        to_signed(%7d, 18)%s  -- [%4d] %s = %+.6f\n",
                 v, last ? " " : ",",
-                i, coeff_names[i % 8], v / FP_SCALE);
+                i, coeff_names[idx], v / scale);
     }
 
     fprintf(f, "    );\n");
@@ -600,43 +671,84 @@ void gen_vhdl_rom_entity(FILE *f, const char *name, int addr_bits,
     fprintf(f, "end architecture;\n");
 }
 
-void gen_vhdl_rom_entities(const char *outdir)
+// ============================================================
+// VHDL package with all scale constants
+// ============================================================
+void gen_vhdl_scales_package(FILE *f, const AllFilterScales &scales)
+{
+    fprintf(f, "-- Auto-generated by gen_votrax_roms.cpp\n");
+    fprintf(f, "-- SC01A filter coefficient scale constants\n");
+    fprintf(f, "--\n");
+    fprintf(f, "-- A coefficients: ROM idx 1..N_X  (feedforward, addr_for_tap: 1+tap)\n");
+    fprintf(f, "-- B coefficients: ROM idx 5..4+NB (feedback,    addr_for_tap: 5+(tap-N_X))\n");
+    fprintf(f, "-- Scale = 2^FP_FRAC_x  (optimal: largest power of 2 fitting 18-bit signed)\n");
+    fprintf(f, "\n");
+    fprintf(f, "library ieee;\n");
+    fprintf(f, "use ieee.std_logic_1164.all;\n");
+    fprintf(f, "\n");
+    fprintf(f, "package sc01a_coeff_scales is\n");
+    fprintf(f, "\n");
+
+    auto emit = [&](const char *name, const FilterScales &s) {
+        fprintf(f, "    -- %s\n", name);
+        fprintf(f, "    constant %s_FP_FRAC_A : integer := %d;  -- scale = %.0f\n",
+                name, s.frac_a, s.scale_a());
+        fprintf(f, "    constant %s_FP_FRAC_B : integer := %d;  -- scale = %.0f\n",
+                name, s.frac_b, s.scale_b());
+        fprintf(f, "\n");
+    };
+
+    emit("F1",  scales.f1);
+    emit("F2V", scales.f2v);
+    emit("F3",  scales.f3);
+    emit("F4",  scales.f4);
+    emit("FX",  scales.fx);
+    emit("FN",  scales.fn);
+    emit("F2N", scales.f2n);
+
+    fprintf(f, "end package;\n");
+}
+
+// ============================================================
+void gen_vhdl_rom_entities(const char *outdir, const AllFilterScales &scales)
 {
     char path[256];
-    auto fill = [](int32_t *dst, const Coeffs &c) {
-        for (int i = 0; i < 8; i++) dst[i] = to_fixed(c[i]);
-    };
 
     // ---- F1: 128 entries, 7-bit addr ----
     {
         int32_t data[128];
         for (uint32_t b = 0; b < 16; b++) {
             double c3 = 2280 + bits_to_caps(b, {2546, 4973, 9861, 19724});
-            fill(&data[b*8], build_standard(11247, 11797, 949, 52067, c3, 166272));
+            fill_scaled(&data[b*8],
+                        build_standard(11247, 11797, 949, 52067, c3, 166272),
+                        scales.f1);
         }
         snprintf(path, sizeof(path), "%s/f1_rom.vhd", outdir);
         FILE *f = fopen(path, "w");
-        gen_vhdl_rom_entity(f, "f1_rom", 7, 128, data);
+        gen_vhdl_rom_entity(f, "f1_rom", 7, 128, data, scales.f1);
         fclose(f);
-        fprintf(stderr, "Written: %s\n", path);
+        fprintf(stderr, "Written: %s  (FP_FRAC_A=%d FP_FRAC_B=%d)\n",
+                path, scales.f1.frac_a, scales.f1.frac_b);
     }
 
-    // ---- F2V: 4096 entries, 12-bit addr (full BRAM!) ----
+    // ---- F2V: 4096 entries, 12-bit addr ----
     {
         int32_t data[4096];
         for (uint32_t qb = 0; qb < 16; qb++) {
             double c2t = 829 + bits_to_caps(qb, {1390, 2965, 5875, 11297});
             for (uint32_t fb = 0; fb < 32; fb++) {
                 double c3 = 2352 + bits_to_caps(fb, {833, 1663, 3164, 6327, 12654});
-                fill(&data[(qb*32+fb)*8],
-                     build_standard(24840, 29154, c2t, 38180, c3, 34270));
+                fill_scaled(&data[(qb*32+fb)*8],
+                            build_standard(24840, 29154, c2t, 38180, c3, 34270),
+                            scales.f2v);
             }
         }
         snprintf(path, sizeof(path), "%s/f2v_rom.vhd", outdir);
         FILE *f = fopen(path, "w");
-        gen_vhdl_rom_entity(f, "f2v_rom", 12, 4096, data);
+        gen_vhdl_rom_entity(f, "f2v_rom", 12, 4096, data, scales.f2v);
         fclose(f);
-        fprintf(stderr, "Written: %s\n", path);
+        fprintf(stderr, "Written: %s  (FP_FRAC_A=%d FP_FRAC_B=%d)\n",
+                path, scales.f2v.frac_a, scales.f2v.frac_b);
     }
 
     // ---- F3: 128 entries, 7-bit addr ----
@@ -644,62 +756,79 @@ void gen_vhdl_rom_entities(const char *outdir)
         int32_t data[128];
         for (uint32_t b = 0; b < 16; b++) {
             double c3 = 8480 + bits_to_caps(b, {2226, 4485, 9056, 18111});
-            fill(&data[b*8], build_standard(0, 17594, 868, 18828, c3, 50019));
+            fill_scaled(&data[b*8],
+                        build_standard(0, 17594, 868, 18828, c3, 50019),
+                        scales.f3);
         }
         snprintf(path, sizeof(path), "%s/f3_rom.vhd", outdir);
         FILE *f = fopen(path, "w");
-        gen_vhdl_rom_entity(f, "f3_rom", 7, 128, data);
+        gen_vhdl_rom_entity(f, "f3_rom", 7, 128, data, scales.f3);
         fclose(f);
-        fprintf(stderr, "Written: %s\n", path);
+        fprintf(stderr, "Written: %s  (FP_FRAC_A=%d FP_FRAC_B=%d)\n",
+                path, scales.f3.frac_a, scales.f3.frac_b);
     }
 
-    // ---- F4: 8 entries, 3-bit addr (constant) ----
+    // ---- F4: 8 entries, 3-bit addr ----
     {
         int32_t data[8];
-        fill(data, build_standard(0, 28810, 1165, 21457, 8558, 7289));
+        fill_scaled(data, build_standard(0, 28810, 1165, 21457, 8558, 7289), scales.f4);
         snprintf(path, sizeof(path), "%s/f4_rom.vhd", outdir);
         FILE *f = fopen(path, "w");
-        gen_vhdl_rom_entity(f, "f4_rom", 3, 8, data);
+        gen_vhdl_rom_entity(f, "f4_rom", 3, 8, data, scales.f4);
         fclose(f);
-        fprintf(stderr, "Written: %s\n", path);
+        fprintf(stderr, "Written: %s  (FP_FRAC_A=%d FP_FRAC_B=%d)\n",
+                path, scales.f4.frac_a, scales.f4.frac_b);
     }
 
-    // ---- FX: 8 entries, 3-bit addr (constant) ----
+    // ---- FX: 8 entries, 3-bit addr ----
     {
         int32_t data[8];
-        fill(data, build_lowpass(1122, 23131));
+        fill_scaled(data, build_lowpass(1122, 23131), scales.fx);
         snprintf(path, sizeof(path), "%s/fx_rom.vhd", outdir);
         FILE *f = fopen(path, "w");
-        gen_vhdl_rom_entity(f, "fx_rom", 3, 8, data);
+        gen_vhdl_rom_entity(f, "fx_rom", 3, 8, data, scales.fx);
         fclose(f);
-        fprintf(stderr, "Written: %s\n", path);
+        fprintf(stderr, "Written: %s  (FP_FRAC_A=%d FP_FRAC_B=%d)\n",
+                path, scales.fx.frac_a, scales.fx.frac_b);
     }
 
-    // ---- FN: 8 entries, 3-bit addr (constant) ----
+    // ---- FN: 8 entries, 3-bit addr ----
     {
         int32_t data[8];
-        fill(data, build_noise_shaper(15500, 14854, 8450, 9523, 14083));
+        fill_scaled(data, build_noise_shaper(15500, 14854, 8450, 9523, 14083), scales.fn);
         snprintf(path, sizeof(path), "%s/fn_rom.vhd", outdir);
         FILE *f = fopen(path, "w");
-        gen_vhdl_rom_entity(f, "fn_rom", 3, 8, data);
+        gen_vhdl_rom_entity(f, "fn_rom", 3, 8, data, scales.fn);
         fclose(f);
-        fprintf(stderr, "Written: %s\n", path);
+        fprintf(stderr, "Written: %s  (FP_FRAC_A=%d FP_FRAC_B=%d)\n",
+                path, scales.fn.frac_a, scales.fn.frac_b);
     }
 
-    // ---- F2N (injection): 4096 entries, 12-bit addr (same as F2V) ----
+    // ---- F2N: 4096 entries, 12-bit addr ----
     {
         int32_t data[4096];
         for (uint32_t qb = 0; qb < 16; qb++) {
             double c2t = 829 + bits_to_caps(qb, {1390, 2965, 5875, 11297});
             for (uint32_t fb = 0; fb < 32; fb++) {
                 double c3 = 2352 + bits_to_caps(fb, {833, 1663, 3164, 6327, 12654});
-                fill(&data[(qb*32+fb)*8],
-                     build_injection(29154, c2t, 38180, c3, 34270));
+                fill_scaled(&data[(qb*32+fb)*8],
+                            build_injection(29154, c2t, 38180, c3, 34270),
+                            scales.f2n);
             }
         }
         snprintf(path, sizeof(path), "%s/f2n_rom.vhd", outdir);
         FILE *f = fopen(path, "w");
-        gen_vhdl_rom_entity(f, "f2n_rom", 12, 4096, data);
+        gen_vhdl_rom_entity(f, "f2n_rom", 12, 4096, data, scales.f2n);
+        fclose(f);
+        fprintf(stderr, "Written: %s  (FP_FRAC_A=%d FP_FRAC_B=%d)\n",
+                path, scales.f2n.frac_a, scales.f2n.frac_b);
+    }
+
+    // ---- VHDL package with all scale constants ----
+    {
+        snprintf(path, sizeof(path), "%s/sc01a_coeff_scales_pkg.vhd", outdir);
+        FILE *f = fopen(path, "w");
+        gen_vhdl_scales_package(f, scales);
         fclose(f);
         fprintf(stderr, "Written: %s\n", path);
     }
@@ -708,15 +837,32 @@ void gen_vhdl_rom_entities(const char *outdir)
 // ============================================================
 int main()
 {
+    set_clocks_from_dac(0x80);
     sanity_check();
     stability_check();
 
+    AllFilterScales scales = compute_all_scales();
+
+    fprintf(stderr, "=== Optimal scales (frac_a / frac_b) ===\n");
+    auto print_scale = [&](const char *name, const FilterScales &s) {
+        fprintf(stderr, "  %-6s: FP_FRAC_A=%d (%.0f)  FP_FRAC_B=%d (%.0f)\n",
+                name, s.frac_a, s.scale_a(), s.frac_b, s.scale_b());
+    };
+    print_scale("F1",  scales.f1);
+    print_scale("F2V", scales.f2v);
+    print_scale("F3",  scales.f3);
+    print_scale("F4",  scales.f4);
+    print_scale("FX",  scales.fx);
+    print_scale("FN",  scales.fn);
+    print_scale("F2N", scales.f2n);
+    fprintf(stderr, "\n");
+
     FILE *f = fopen("/tmp/votrax_rom_tables.h", "w");
-    gen_c_header(f);
+    gen_c_header(f, scales);
     fclose(f);
     fprintf(stderr, "C header: /tmp/votrax_rom_tables.h\n");
 
-    gen_vhdl_rom_entities("/tmp");
+    gen_vhdl_rom_entities("/tmp", scales);
 
     return 0;
 }

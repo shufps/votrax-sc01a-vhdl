@@ -132,49 +132,49 @@ begin
     -- IIR filter instances
     -- ================================================================
     u_f1 : entity work.iir_filter_slow
-        generic map(N_X => 4, N_Y => 4)
+        generic map(N_X => 4, N_Y => 4, FP_FRAC_A => 22, FP_FRAC_B => 17, FILTER_NAME => "F1")
         port map(clk => clk, reset_n => reset_n,
                  start => f1.start, x_in => f1.x_in,
                  rom_addr => f1.rom_addr, rom_data => f1.rom_data,
                  y_out => f1.y_out, done => f1.done);
 
     u_f2v : entity work.iir_filter_slow
-        generic map(N_X => 4, N_Y => 4)
+        generic map(N_X => 4, N_Y => 4, FP_FRAC_A => 19, FP_FRAC_B => 17, FILTER_NAME => "F2V")
         port map(clk => clk, reset_n => reset_n,
                  start => f2v.start, x_in => f2v.x_in,
                  rom_addr => f2v.rom_addr, rom_data => f2v.rom_data,
                  y_out => f2v.y_out, done => f2v.done);
 
     u_fn : entity work.iir_filter_slow
-        generic map(N_X => 4, N_Y => 4)
+        generic map(N_X => 4, N_Y => 4, FP_FRAC_A => 32, FP_FRAC_B => 17, INPUT_GAIN_POW2 => 15, FILTER_NAME => "FN")
         port map(clk => clk, reset_n => reset_n,
                  start => fn.start, x_in => fn.x_in,
                  rom_addr => fn.rom_addr, rom_data => fn.rom_data,
                  y_out => fn.y_out, done => fn.done);
 
     u_f3 : entity work.iir_filter_slow
-        generic map(N_X => 4, N_Y => 4)
+        generic map(N_X => 4, N_Y => 4, FP_FRAC_A => 19, FP_FRAC_B => 17, FILTER_NAME => "F3")
         port map(clk => clk, reset_n => reset_n,
                  start => f3.start, x_in => f3.x_in,
                  rom_addr => f3.rom_addr, rom_data => f3.rom_data,
                  y_out => f3.y_out, done => f3.done);
 
     u_f4 : entity work.iir_filter_slow
-        generic map(N_X => 4, N_Y => 4)
+        generic map(N_X => 4, N_Y => 4, FP_FRAC_A => 18, FP_FRAC_B => 17, FILTER_NAME => "F4")
         port map(clk => clk, reset_n => reset_n,
                  start => f4.start, x_in => f4.x_in,
                  rom_addr => f4.rom_addr, rom_data => f4.rom_data,
                  y_out => f4.y_out, done => f4.done);
 
     u_f2n : entity work.iir_filter_slow
-        generic map(N_X => 2, N_Y => 2)
+        generic map(N_X => 2, N_Y => 2, FP_FRAC_A => 16, FP_FRAC_B => 17, FILTER_NAME => "F2N")
         port map(clk => clk, reset_n => reset_n,
                  start => f2n.start, x_in => f2n.x_in,
                  rom_addr => f2n.rom_addr, rom_data => f2n.rom_data,
                  y_out => f2n.y_out, done => f2n.done);
 
     u_fx : entity work.iir_filter_slow
-        generic map(N_X => 2, N_Y => 2)
+        generic map(N_X => 2, N_Y => 2, FP_FRAC_A => 18, FP_FRAC_B => 18, FILTER_NAME => "FX")
         port map(clk => clk, reset_n => reset_n,
                  start => fx.start, x_in => fx.x_in,
                  rom_addr => fx.rom_addr, rom_data => fx.rom_data,
@@ -246,6 +246,7 @@ begin
                 else
                     noise_inp := to_signed(-16384, 18);
                 end if;
+                --report "fn_in: " & integer'image(to_integer(noise_inp)) severity note;
                 fn.x_in  <= fp_scale15(noise_inp, filt_fa);
                 f1.start <= '1';
                 fn.start <= '1';
@@ -285,6 +286,15 @@ begin
                 fx.x_in  <= fp_scale7(f4.y_out,
                              unsigned(closure_r(4 downto 2)) xor "111");
                 fx.start <= '1';
+            end if;
+        end if;
+    end process;
+
+    process(clk)
+    begin
+        if rising_edge(clk) then
+            if fn.done = '1' then
+                --report "fn_out: " & integer'image(to_integer(fn.y_out)) severity note;
             end if;
         end if;
     end process;

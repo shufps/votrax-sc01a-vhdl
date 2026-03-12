@@ -41,8 +41,8 @@ architecture sim of sc01a_tb is
     signal clk_dac : std_logic_vector(7 downto 0) := x"A0"; -- 950kHz
     signal audio_out : signed(15 downto 0);
     signal audio_valid : std_logic;
-    constant CLK_PERIOD : time := 25 ns; -- 40 MHz
-
+    --constant CLK_PERIOD : time := 71 ns; -- 14.08 MHz
+    constant CLK_PERIOD : time := 35 ns; -- 28 MHz (35.7 ns)
     file audio_file : text;
 
 begin
@@ -51,7 +51,7 @@ begin
     -- DUT
     -- ================================================================
     u_dut : entity work.sc01a
-        generic map(CLK_HZ => 40000000)
+        generic map(CLK_HZ => 28000000,IS_SC01A => 0,ENABLE_RESAMPLER=>0)
         port map(
             clk => clk,
             reset_n => reset_n,

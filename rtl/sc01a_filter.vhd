@@ -147,7 +147,7 @@ begin
                  y_out => f2v.y_out, done => f2v.done);
 
     u_fn : entity work.iir_filter_slow
-        generic map(N_X => 4, N_Y => 4, FP_FRAC_A => FN_FP_FRAC_A, FP_FRAC_B => FN_FP_FRAC_B, INPUT_GAIN_POW2 => 13, FILTER_NAME => "FN")
+        generic map(N_X => 4, N_Y => 4, FP_FRAC_A => FN_FP_FRAC_A, FP_FRAC_B => FN_FP_FRAC_B, INPUT_GAIN_POW2 => 14, FILTER_NAME => "FN")
         port map(clk => clk, reset_n => reset_n,
                  start => fn.start, x_in => fn.x_in,
                  rom_addr => fn.rom_addr, rom_data => fn.rom_data,

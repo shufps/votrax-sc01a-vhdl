@@ -123,6 +123,9 @@ private:
 	int32_t m_vn_5[2];
 	int32_t m_vn_6[2];
 
+	// Signal fixed-point format: s(2.15)
+	static constexpr int VOTRAX_FP_FRAC = 15;
+
 	// Multiply two s(2.15) values → s(2.15)
 	// result = (a * b) >> 15
 	static inline int32_t fp_mul(int32_t a, int32_t b) {
@@ -152,19 +155,20 @@ private:
 
 	// Apply IIR filter from ROM using integer MAC.
 	// y[n] = sum(x[i] * a[i]) - sum(y[i] * b[i+1])
-	// All values s(2.15), MAC uses int64_t, result >> 15.
+	// A and B coefficients use per-filter fixed-point scales (frac_a, frac_b).
 	// b0 = 1.0 (normalized), not stored, no division needed.
 	// ROM layout: base+0=b0, base+1=a0..base+4=a3, base+5=b1..base+7=b3
 	template<u32 Nx, u32 Ny>
 	static int32_t apply_filter(const int32_t (&x)[Nx], const int32_t (&y)[Ny],
-	                            const int32_t *rom, uint32_t base)
+	                            const int32_t *rom, uint32_t base, int frac_a, int frac_b)
 	{
-		int64_t acc = 0;
+		int64_t acc_a = 0;
 		for(u32 i = 0; i < Nx; i++)
-			acc += (int64_t)x[i] * rom[base + 1 + i];
+			acc_a += (int64_t)x[i] * rom[base + 1 + i];
+		int64_t acc_b = 0;
 		for(u32 i = 0; i < Ny-1; i++)
-			acc -= (int64_t)y[i] * rom[base + 5 + i];
-		return (int32_t)(acc >> VOTRAX_FP_FRAC);
+			acc_b += (int64_t)y[i] * rom[base + 5 + i];
+		return (int32_t)((acc_a >> frac_a) - (acc_b >> frac_b));
 	}
 
 	void build_injection_filter(double *a, double *b,

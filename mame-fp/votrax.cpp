@@ -23,7 +23,7 @@
 //#define VERBOSE (LOG_GENERAL | LOG_PHONE)
 #include "logmacro.h"
 
-// f2n was made working but calculation is questionable, 
+// f2n was made working but calculation is questionable,
 // keep it disabled per default
 //#define F2N_ENABLED
 
@@ -87,9 +87,12 @@ votrax_sc01a_device::votrax_sc01a_device(const machine_config &mconfig, const ch
 
 void votrax_sc01_device::write(uint8_t data)
 {
+	// flush out anything currently processing
 	m_stream->update();
 
 	u8 prev = m_phone;
+
+	// only 6 bits matter
 	m_phone = data & 0x3f;
 
 	if(m_phone != prev || m_phone != 0x3f)
@@ -97,16 +100,21 @@ void votrax_sc01_device::write(uint8_t data)
 
 	VOTRAX_DUMP_PHONE(m_phone, m_inflection);
 
-    printf("%d\n", (int) m_phone);
+        printf("%d\n", (int) m_phone);
 	m_ar_state = CLEAR_LINE;
+        phone_commit();
 	m_ar_cb(m_ar_state);
-
-	if(m_timer->expire().is_never() || m_timer->param() != T_COMMIT_PHONE)
-		m_timer->adjust(attotime::from_ticks(72, m_mainclock), T_COMMIT_PHONE);
 }
+
+
+//-------------------------------------------------
+//  inflection_w - handle a write to the
+//  inflection bits
+//-------------------------------------------------
 
 void votrax_sc01_device::inflection_w(uint8_t data)
 {
+	// only 2 bits matter
 	data &= 3;
 	if(m_inflection == data)
 		return;
@@ -114,6 +122,12 @@ void votrax_sc01_device::inflection_w(uint8_t data)
 	m_stream->update();
 	m_inflection = data;
 }
+
+
+//-------------------------------------------------
+//  sound_stream_update - handle update requests
+//  for our sound stream
+//-------------------------------------------------
 
 void votrax_sc01_device::sound_stream_update(sound_stream &stream)
 {
@@ -241,18 +255,8 @@ void votrax_sc01_device::device_reset()
 	memset(m_vn_6, 0, sizeof(m_vn_6));
 }
 
-#include <execinfo.h>
-
-void dump_stack()
-{
-    void* array[32];
-    int size = backtrace(array, 32);
-    backtrace_symbols_fd(array, size, 2); // 2 = stderr
-}
-
 void votrax_sc01_device::device_clock_changed()
 {
-    dump_stack();
 	u32 newfreq = clock();
 	if(newfreq != m_mainclock) {
 		m_stream->update();
@@ -273,18 +277,6 @@ void votrax_sc01_device::device_clock_changed()
 TIMER_CALLBACK_MEMBER(votrax_sc01_device::phone_tick)
 {
 	m_stream->update();
-
-	switch(param) {
-	case T_COMMIT_PHONE:
-		phone_commit();
-		m_timer->adjust(attotime::from_ticks(16*(m_rom_duration*4+1)*4*9+2, m_mainclock), T_END_OF_PHONE);
-		break;
-	case T_END_OF_PHONE:
-		m_ar_state = ASSERT_LINE;
-		break;
-	}
-
-	m_ar_cb(m_ar_state);
 }
 
 void votrax_sc01_device::phone_commit()
@@ -333,7 +325,12 @@ void votrax_sc01_device::chip_update()
 			if(m_ticks == m_rom_cld)
 				m_cur_closure = m_rom_closure;
 		}
-	}
+	} else {
+        if (m_ar_state != ASSERT_LINE) {
+            m_ar_state = ASSERT_LINE;
+            m_ar_cb(m_ar_state);
+        }
+    }
 
 	m_update_counter++;
 	if(m_update_counter == 0x30)
@@ -435,11 +432,11 @@ sound_stream::sample_t votrax_sc01_device::analog_calc()
 	shift_hist(v, m_voice_1);
 
 	// 3. Apply the f1 filter
-	v = apply_filter(m_voice_1, m_voice_2, f1_rom, m_f1_addr);
+	v = apply_filter(m_voice_1, m_voice_2, f1_rom, m_f1_addr, F1_FP_FRAC_A, F1_FP_FRAC_B);
 	shift_hist(v, m_voice_2);
 
 	// 4. Apply the f2 filter, voice half
-	v = apply_filter(m_voice_2, m_voice_3, f2v_rom, m_f2v_addr);
+	v = apply_filter(m_voice_2, m_voice_3, f2v_rom, m_f2v_addr, F2V_FP_FRAC_A, F2V_FP_FRAC_B);
 	shift_hist(v, m_voice_3);
 
 	// Noise-only path.
@@ -449,7 +446,7 @@ sound_stream::sample_t votrax_sc01_device::analog_calc()
 	shift_hist(n, m_noise_1);
 
 	// 6. Apply the noise shaper (fn_rom, constant, base = 0)
-	n = apply_filter(m_noise_1, m_noise_2, fn_rom, 0);
+	n = apply_filter(m_noise_1, m_noise_2, fn_rom, 0, FN_FP_FRAC_A, FN_FP_FRAC_B);
 	shift_hist(n, m_noise_2);
 
 	// 7. Scale with f2 noise cutoff (0..15), divide by 15
@@ -462,7 +459,7 @@ sound_stream::sample_t votrax_sc01_device::analog_calc()
 	shift_hist(0, m_noise_4);
 #else
 	// 8. Apply the f2 noise filter (f2n_rom, same address as f2v)
-	int32_t n3 = apply_filter(m_noise_3, m_noise_4, f2n_rom, m_f2v_addr);
+	int32_t n3 = apply_filter(m_noise_3, m_noise_4, f2n_rom, m_f2v_addr, F2N_FP_FRAC_A, F2N_FP_FRAC_B);
 	shift_hist(n3, m_noise_4);
 
 	// Mixed path.
@@ -472,7 +469,7 @@ sound_stream::sample_t votrax_sc01_device::analog_calc()
 	shift_hist(vn, m_vn_1);
 
 	// 10. Apply the f3 filter
-	vn = apply_filter(m_vn_1, m_vn_2, f3_rom, m_f3_addr);
+	vn = apply_filter(m_vn_1, m_vn_2, f3_rom, m_f3_addr, F3_FP_FRAC_A, F3_FP_FRAC_B);
 	shift_hist(vn, m_vn_2);
 
 	// 11. Second noise insertion: n * (5 + (15^filt_fc)) / 20
@@ -483,7 +480,7 @@ sound_stream::sample_t votrax_sc01_device::analog_calc()
 	shift_hist(vn, m_vn_3);
 
 	// 12. Apply the f4 filter (constant, base = 0)
-	vn = apply_filter(m_vn_3, m_vn_4, f4_rom, 0);
+	vn = apply_filter(m_vn_3, m_vn_4, f4_rom, 0, F4_FP_FRAC_A, F4_FP_FRAC_B);
 	shift_hist(vn, m_vn_4);
 
 	// 13. Apply the glottal closure amplitude (0..7), divide by 7
@@ -491,7 +488,7 @@ sound_stream::sample_t votrax_sc01_device::analog_calc()
 	shift_hist(vn, m_vn_5);
 
 	// 14. Apply the final lowpass filter (fx_rom, constant, base = 0)
-	vn = apply_filter(m_vn_5, m_vn_6, fx_rom, 0);
+	vn = apply_filter(m_vn_5, m_vn_6, fx_rom, 0, FX_FP_FRAC_A, FX_FP_FRAC_B);
 	shift_hist(vn, m_vn_6);
 
 	// Convert s(2.15) back to float sample, apply final 0.35 gain

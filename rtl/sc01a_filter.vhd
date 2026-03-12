@@ -26,6 +26,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+use work.sc01a_coeff_scales.all;
 
 entity sc01a_filter_pipe is
     generic (
@@ -132,49 +133,49 @@ begin
     -- IIR filter instances
     -- ================================================================
     u_f1 : entity work.iir_filter_slow
-        generic map(N_X => 4, N_Y => 4)
+        generic map(N_X => 4, N_Y => 4, FP_FRAC_A => F1_FP_FRAC_A, FP_FRAC_B => F1_FP_FRAC_B, FILTER_NAME => "F1")
         port map(clk => clk, reset_n => reset_n,
                  start => f1.start, x_in => f1.x_in,
                  rom_addr => f1.rom_addr, rom_data => f1.rom_data,
                  y_out => f1.y_out, done => f1.done);
 
     u_f2v : entity work.iir_filter_slow
-        generic map(N_X => 4, N_Y => 4)
+        generic map(N_X => 4, N_Y => 4, FP_FRAC_A => F2V_FP_FRAC_A, FP_FRAC_B => F2V_FP_FRAC_B, FILTER_NAME => "F2V")
         port map(clk => clk, reset_n => reset_n,
                  start => f2v.start, x_in => f2v.x_in,
                  rom_addr => f2v.rom_addr, rom_data => f2v.rom_data,
                  y_out => f2v.y_out, done => f2v.done);
 
     u_fn : entity work.iir_filter_slow
-        generic map(N_X => 4, N_Y => 4)
+        generic map(N_X => 4, N_Y => 4, FP_FRAC_A => FN_FP_FRAC_A, FP_FRAC_B => FN_FP_FRAC_B, INPUT_GAIN_POW2 => 14, FILTER_NAME => "FN")
         port map(clk => clk, reset_n => reset_n,
                  start => fn.start, x_in => fn.x_in,
                  rom_addr => fn.rom_addr, rom_data => fn.rom_data,
                  y_out => fn.y_out, done => fn.done);
 
     u_f3 : entity work.iir_filter_slow
-        generic map(N_X => 4, N_Y => 4)
+        generic map(N_X => 4, N_Y => 4, FP_FRAC_A => F3_FP_FRAC_A, FP_FRAC_B => F3_FP_FRAC_B, FILTER_NAME => "F3")
         port map(clk => clk, reset_n => reset_n,
                  start => f3.start, x_in => f3.x_in,
                  rom_addr => f3.rom_addr, rom_data => f3.rom_data,
                  y_out => f3.y_out, done => f3.done);
 
     u_f4 : entity work.iir_filter_slow
-        generic map(N_X => 4, N_Y => 4)
+        generic map(N_X => 4, N_Y => 4, FP_FRAC_A => F4_FP_FRAC_A, FP_FRAC_B => F4_FP_FRAC_B, FILTER_NAME => "F4")
         port map(clk => clk, reset_n => reset_n,
                  start => f4.start, x_in => f4.x_in,
                  rom_addr => f4.rom_addr, rom_data => f4.rom_data,
                  y_out => f4.y_out, done => f4.done);
 
     u_f2n : entity work.iir_filter_slow
-        generic map(N_X => 2, N_Y => 2)
+        generic map(N_X => 2, N_Y => 2, FP_FRAC_A => F2N_FP_FRAC_A, FP_FRAC_B => F2N_FP_FRAC_B, FILTER_NAME => "F2N")
         port map(clk => clk, reset_n => reset_n,
                  start => f2n.start, x_in => f2n.x_in,
                  rom_addr => f2n.rom_addr, rom_data => f2n.rom_data,
                  y_out => f2n.y_out, done => f2n.done);
 
     u_fx : entity work.iir_filter_slow
-        generic map(N_X => 2, N_Y => 2)
+        generic map(N_X => 2, N_Y => 2, FP_FRAC_A => FX_FP_FRAC_A, FP_FRAC_B => FX_FP_FRAC_B, FILTER_NAME => "FX")
         port map(clk => clk, reset_n => reset_n,
                  start => fx.start, x_in => fx.x_in,
                  rom_addr => fx.rom_addr, rom_data => fx.rom_data,
@@ -204,12 +205,13 @@ begin
     -- ================================================================
 
     -- F1 → F2V (F1 and FN finish together, equal tap count)
+    -- halve F1 output to give 1-bit headroom in downstream filters
     f2v.start <= f1.done;
-    f2v.x_in  <= f1.y_out;
+    f2v.x_in  <= shift_right(f1.y_out, 1);
 
     -- F2V → F3 (direct) or F2V → F2N → F3 (ENABLE_F2N)
     f2n.start <= f2v.done;
-    f2n.x_in  <= fp_scale15(fn.y_out, filt_fc_r); -- fn.y_out stable since fn.done
+    f2n.x_in  <= fp_scale15(shift_right(fn.y_out, 1), filt_fc_r); -- fn.y_out halved for headroom
 
     f3.start  <= f2v.done when not ENABLE_F2N else f2n.done;
     f3.x_in   <= f2v.y_out when not ENABLE_F2N else f2v.y_out + f2n.y_out;
@@ -246,6 +248,7 @@ begin
                 else
                     noise_inp := to_signed(-16384, 18);
                 end if;
+                --report "fn_in: " & integer'image(to_integer(noise_inp)) severity note;
                 fn.x_in  <= fp_scale15(noise_inp, filt_fa);
                 f1.start <= '1';
                 fn.start <= '1';
@@ -258,6 +261,7 @@ begin
         variable noise_scale : integer range 0 to 20;
         variable tmp         : signed(63 downto 0);
         variable noise_add   : signed(17 downto 0);
+        variable sum32       : signed(31 downto 0);
     begin
         if rising_edge(clk) then
             f4.start <= '0';
@@ -265,7 +269,8 @@ begin
                 f4.x_in <= (others => '0');
             elsif f3.done = '1' then
                 noise_scale := 5 + to_integer(to_unsigned(15, 4) xor filt_fc_r);
-                tmp         := resize(fn.y_out * to_signed(noise_scale, 18), 64);
+                -- halve FN output for 1-bit headroom (matches F1 output scaling)
+                tmp         := resize(shift_right(fn.y_out, 1) * to_signed(noise_scale, 18), 64);
                 noise_add   := signed(resize(
                                shift_right(tmp(32 downto 0) * to_signed(1638, 18), 15), 18));
                 f4.x_in  <= f3.y_out + noise_add;
@@ -285,6 +290,15 @@ begin
                 fx.x_in  <= fp_scale7(f4.y_out,
                              unsigned(closure_r(4 downto 2)) xor "111");
                 fx.start <= '1';
+            end if;
+        end if;
+    end process;
+
+    process(clk)
+    begin
+        if rising_edge(clk) then
+            if fn.done = '1' then
+                --report "fn_out: " & integer'image(to_integer(fn.y_out)) severity note;
             end if;
         end if;
     end process;

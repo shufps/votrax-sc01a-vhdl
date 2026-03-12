@@ -36,11 +36,12 @@ end entity bally;
 
 architecture rtl of bally is
 
-    signal votrax_audio   : std_logic_vector(15 downto 0);
+    signal votrax_audio   : signed(17 downto 0);
     signal votrax_valid   : std_logic;
 
-    signal rc_out         : signed(15 downto 0);
+    signal rc_out         : signed(17 downto 0);
     signal rc_valid       : std_logic;
+    signal rc_amp         : signed(18 downto 0) := (others => '0'); -- *1.5 intermediate
 
 begin
 
@@ -57,9 +58,8 @@ begin
             I_VOTRAX_DATA => I_VOTRAX_DATA,
             I_VOTRAX_STB  => I_VOTRAX_STB,
             O_VOTRAX_AR   => O_VOTRAX_AR,
-            s_enable      => s_enable,
-            audio_out_l   => votrax_audio,
-            audio_out_r   => open,
+            s_enable      => '1',
+            audio_out     => votrax_audio,
             audio_valid   => votrax_valid
         );
 
@@ -71,17 +71,20 @@ begin
         port map (
             clk         => CLK,
             reset_n     => I_RESET_L,
-            s_in        => signed(votrax_audio),
+            s_in        => votrax_audio,
             s_valid     => votrax_valid,
             s_out       => rc_out,
-            s_out_valid => rc_valid
+            s_out_valid => open
         );
 
     -- ================================================================
     -- Outputs
-    -- ================================================================
-    audio_out_l <= std_logic_vector(rc_out);
-    audio_out_r <= std_logic_vector(rc_out);
-    audio_valid <= rc_valid;
+    -- x1.5 gain (rc_out + rc_out>>1), saturate to 16-bit
+    rc_amp <= resize(rc_out, 19) + resize(shift_right(rc_out, 1), 19);
+
+    audio_out_l <= std_logic_vector(to_signed( 32767, 16)) when rc_amp >  65535 else
+                      std_logic_vector(to_signed(-32768, 16)) when rc_amp < -65536 else
+                      std_logic_vector(rc_amp(16 downto 1));
+    audio_out_r <= audio_out_l;
 
 end architecture rtl;

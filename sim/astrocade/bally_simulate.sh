@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-ghdl -a --std=08 votrax_tb_vectors.vhd \
+ghdl -a --std=08 -O3 votrax_tb_vectors.vhd \
     ../../rtl/sc01a_rom.vhd \
     ../../rtl/sc01_rom.vhd \
     ../../rtl/f1_rom.vhd \
@@ -19,5 +19,5 @@ ghdl -a --std=08 votrax_tb_vectors.vhd \
     ../../rtl/astrocade/bally_rc_filter.vhd \
     bally.vhd \
     bally_tb.vhd
-ghdl -e --std=08 bally_tb
-ghdl -r bally_tb --wave=wave.ghw
+ghdl -e --std=08 -O3 bally_tb
+ghdl -r bally_tb #--wave=wave.ghw

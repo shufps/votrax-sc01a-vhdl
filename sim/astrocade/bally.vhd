@@ -74,7 +74,7 @@ begin
             s_in        => votrax_audio,
             s_valid     => votrax_valid,
             s_out       => rc_out,
-            s_out_valid => open
+            s_out_valid => rc_valid
         );
 
     -- ================================================================
@@ -86,5 +86,6 @@ begin
                       std_logic_vector(to_signed(-32768, 16)) when rc_amp < -65536 else
                       std_logic_vector(rc_amp(16 downto 1));
     audio_out_r <= audio_out_l;
+    audio_valid <= rc_valid;
 
 end architecture rtl;

@@ -11,8 +11,7 @@
 --   k    = 9403   (= round(k * 32768))
 --   1-k  = 23365  (= 32768 - k, exact complement)
 --
--- All 4 stages are computed in a single clock cycle using VHDL variables.
--- Expects s_valid pulses at exactly 48 kHz (from sc01a_resamp output).
+-- Pipelined: one stage per clock cycle, 4-cycle latency.
 -- 18-bit version: all data paths widened from 16 to 18 bits.
 
 library ieee;
@@ -36,11 +35,10 @@ architecture rtl of bally_rc_filter is
     constant RC_K  : integer := 9403;          -- k   * 2^15
     constant RC_KM : integer := 32768 - RC_K;  -- (1-k) * 2^15 = 23365
 
-    type state_t is array(0 to 3) of signed(17 downto 0);
-    signal state : state_t := (others => (others => '0'));
+    type pipe_data_t is array(0 to 3) of signed(17 downto 0);
 
-    signal s_out_r       : signed(17 downto 0) := (others => '0');
-    signal s_out_valid_r : std_logic := '0';
+    -- inter-stage pipeline register + 4-bit valid shift register
+    signal pipe_data : pipe_data_t := (others => (others => '0'));
 
     -- One RC stage: y[n] = (RC_K*x + RC_KM*y_prev) >> 15
     -- Input range ±131071 → output guaranteed ±131071 (coefficients sum to 32768)
@@ -60,36 +58,24 @@ architecture rtl of bally_rc_filter is
 begin
 
     process(clk)
-        variable v0, v1, v2, v3 : signed(17 downto 0);
     begin
         if rising_edge(clk) then
             if reset_n = '0' then
-                state        <= (others => (others => '0'));
-                s_out_r      <= (others => '0');
-                s_out_valid_r <= '0';
+                s_out      <= (others => '0');
+                s_out_valid <= '0';
             else
-                s_out_valid_r <= s_valid;
+                s_out_valid <= '0';
 
                 if s_valid = '1' then
-                    -- 4 cascaded stages, computed serially within one cycle
-                    -- each stage uses the OLD state(i) as feedback
-                    v0 := rc_stage(s_in, state(0));
-                    v1 := rc_stage(v0,   state(1));
-                    v2 := rc_stage(v1,   state(2));
-                    v3 := rc_stage(v2,   state(3));
-
-                    state(0) <= v0;
-                    state(1) <= v1;
-                    state(2) <= v2;
-                    state(3) <= v3;
-
-                    s_out_r <= v3;
+                    pipe_data(0) <= rc_stage(s_in, pipe_data(0));
+                    pipe_data(1) <= rc_stage(pipe_data(0), pipe_data(1));
+                    pipe_data(2) <= rc_stage(pipe_data(1), pipe_data(2));
+                    pipe_data(3) <= rc_stage(pipe_data(2), pipe_data(3));
+                    s_out  <= pipe_data(3);
+                    s_out_valid <= '1';
                 end if;
             end if;
         end if;
     end process;
-
-    s_out       <= s_out_r;
-    s_out_valid <= s_out_valid_r;
 
 end architecture;

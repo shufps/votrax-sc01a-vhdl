@@ -4,4 +4,7 @@
 *.mp3
 *.raw
 *.cf
-sc01a_tb
+bally_tb
+qbert_tb
+*.ghw
+*.out

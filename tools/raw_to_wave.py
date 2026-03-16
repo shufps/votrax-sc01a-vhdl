@@ -8,7 +8,7 @@ import sys
 import numpy as np
 import scipy.io.wavfile as wav
 
-SAMPLE_RATE = 44100 #48000# 52778  # 950000 / 18
+SAMPLE_RATE = 48000 #48000# 52778  # 950000 / 18
 
 if len(sys.argv) < 3:
     print(f"Usage: {sys.argv[0]} input.raw output.wav", file=sys.stderr)

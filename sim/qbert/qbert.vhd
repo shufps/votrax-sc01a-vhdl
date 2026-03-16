@@ -10,7 +10,8 @@
 --                sc_hz = 950000 + (clk_dac - 0xA0) * 5500
 --
 -- Signal chain:
---   VotraxSound (SC01 core + DDS + resampler to 48 kHz)
+--   VotraxSound (SC01 core + DDS, variable rate)
+--     -> sc01a_resamp (variable rate → fixed 48 kHz, simulation only)
 --     -> audio_out (16-bit signed, 48 kHz)
 
 library IEEE;
@@ -37,6 +38,11 @@ entity qbert is
 end entity qbert;
 
 architecture rtl of qbert is
+
+    signal votrax_audio   : signed(15 downto 0);
+    signal votrax_valid   : std_logic;
+    signal phase_inc_resamp : unsigned(15 downto 0) := to_unsigned(29792, 16);
+
 begin
 
     u_votrax : entity work.VotraxSound
@@ -51,8 +57,38 @@ begin
             stb         => stb,
             ar          => ar,
             clk_dac     => clk_dac,
-            audio_out   => audio_out,
-            audio_valid => audio_valid
+            audio_out   => votrax_audio,
+            audio_valid => votrax_valid
+        );
+
+    -- Compute resampler phase_inc from clk_dac: 32768 * 48000 * 18 / sc01_hz
+    -- (real arithmetic is fine here — simulation wrapper only)
+    process (clk)
+        variable dac_i : integer;
+        variable sc_hz : integer;
+    begin
+        if rising_edge(clk) then
+            dac_i := to_integer(unsigned(clk_dac));
+            if dac_i < 16#40# then dac_i := 16#40#; end if;
+            sc_hz := 950000 + (dac_i - 16#A0#) * 5500;
+            phase_inc_resamp <= to_unsigned(
+                integer(32768.0 * 864000.0 / real(sc_hz)), 16);
+        end if;
+    end process;
+
+    u_resamp : entity work.sc01a_resamp
+        generic map (
+            CLK_HZ      => CLK_HZ,
+            SAMPLE_BITS => 16
+        )
+        port map (
+            clk          => clk,
+            reset_n      => reset_n,
+            s_in         => votrax_audio,
+            s_valid      => votrax_valid,
+            phase_inc_in => phase_inc_resamp,
+            s_out        => audio_out,
+            s_out_valid  => audio_valid
         );
 
 end architecture rtl;
